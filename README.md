@@ -12,10 +12,6 @@
 
 </div>
 
-> [!NOTE]
-> Скриншоты: `docs/screenshot-history.png`, `docs/screenshot-search.png`, `docs/screenshot-settings.png`.
-> Замените этот блок на реальные изображения перед публикацией.
-
 ## Скачать
 
 **[⬇ Скачать последнюю версию (Releases)](https://github.com/WufCorp/ClipVault/releases/latest)**
