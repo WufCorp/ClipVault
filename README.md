@@ -10,6 +10,7 @@
 <img width="707" height="689" alt="1" src="https://github.com/user-attachments/assets/a8fe75af-b7b5-43d1-9c87-eee40c5c6226" />
 <img width="706" height="686" alt="2" src="https://github.com/user-attachments/assets/b07a7f5a-2095-4fd8-a2da-20f6b3462084" />
 
+</div>
 
 > [!NOTE]
 > Скриншоты: `docs/screenshot-history.png`, `docs/screenshot-search.png`, `docs/screenshot-settings.png`.
