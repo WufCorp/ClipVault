@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ClipVault — Настройки</title>
+  </head>
+  <body>
+    <div id="app">
+      <header class="settings-head">
+        <div class="wordmark">
+          <span class="brand" aria-hidden="true"><svg class="ico" viewBox="0 0 24 24"><rect x="5" y="4.5" width="14" height="16.5" rx="2.5"/><rect x="9" y="2.5" width="6" height="3.6" rx="1.4"/><circle cx="12" cy="13.5" r="3"/><path d="M12 10.9v1.1M12 15v1.1M14.6 13.5h-1.1M10.5 13.5H9.4"/></svg></span>
+          <span class="wordmark-name">ClipVault</span>
+        </div>
+        <span class="wordmark-tag">локально · без сервера</span>
+      </header>
+      <div class="scroll">
+        <!-- ── Лицензия ─────────────────────────────────────── -->
+        <section class="card">
+          <div class="card-head">
+            <h2>Лицензия</h2>
+            <span id="lic-badge" class="badge badge-free">Free</span>
+          </div>
+          <p id="lic-status" class="muted">Бесплатная версия.</p>
+
+          <div id="lic-activate">
+            <label class="field-label" for="lic-key">Ключ активации Pro</label>
+            <textarea
+              id="lic-key"
+              class="key-input"
+              rows="3"
+              placeholder="Вставьте сюда ключ, полученный после оплаты…"
+              spellcheck="false"
+              autocomplete="off"
+            ></textarea>
+            <div id="lic-error" class="error" hidden></div>
+            <div class="btn-row">
+              <button id="lic-apply" class="btn btn-primary" type="button">Активировать</button>
+              <button id="lic-import" class="btn" type="button">Импорт из файла…</button>
+            </div>
+          </div>
+
+          <div id="lic-active" hidden>
+            <div class="btn-row">
+              <button id="lic-export-clip" class="btn" type="button">Копировать ключ</button>
+              <button id="lic-export-file" class="btn" type="button">Экспорт в файл…</button>
+              <button id="lic-deactivate" class="btn btn-ghost-danger" type="button">Деактивировать</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ── Pro ──────────────────────────────────────────── -->
+        <section class="card" id="pro-card">
+          <div class="card-head">
+            <h2>ClipVault Pro</h2>
+            <span class="price">399 ₽ · разово</span>
+          </div>
+          <p class="muted">
+            Безлимитная история, распознавание цветов и URL, вставка без форматирования,
+            слоты, экспорт/импорт и организация. Одна оплата — на всех ваших ПК, без подписки.
+          </p>
+          <div class="btn-row">
+            <button id="buy-pro" class="btn btn-primary" type="button">Купить Pro — 399 ₽</button>
+          </div>
+        </section>
+
+        <!-- ── Общие ────────────────────────────────────────── -->
+        <section class="card">
+          <div class="card-head"><h2>Общие</h2></div>
+
+          <label class="field-label" for="hotkey">Горячая клавиша вызова</label>
+          <div class="btn-row" style="margin-top: 6px">
+            <input id="hotkey" class="text-input hotkey-capture" type="text" readonly
+                   spellcheck="false" placeholder="Нажмите и введите сочетание" />
+            <button id="hotkey-save" class="btn" type="button">Применить</button>
+          </div>
+          <div class="hint-inline">Кликните по полю и зажмите сочетание (например Ctrl + Shift + V), затем «Применить».</div>
+          <div id="hotkey-msg" class="hint-inline" hidden></div>
+
+          <label class="field-label" for="ignore" style="margin-top: 14px">
+            Приложения-исключения (не сохранять буфер)
+          </label>
+          <textarea id="ignore" class="text-area" rows="3" spellcheck="false"
+                    placeholder="keepass.exe, 1password.exe, bank.exe"></textarea>
+          <div class="btn-row">
+            <button id="ignore-save" class="btn" type="button">Сохранить список</button>
+            <span class="hint-inline">Через запятую. Имя .exe. Пароли/банки в безопасности.</span>
+          </div>
+        </section>
+
+        <!-- ── Данные ───────────────────────────────────────── -->
+        <section class="card">
+          <div class="card-head"><h2>Данные</h2></div>
+          <div class="btn-row" style="margin-top: 0">
+            <button id="export-txt" class="btn" type="button">Экспорт TXT</button>
+            <button id="export-json" class="btn" type="button">Экспорт JSON</button>
+            <button id="import-json" class="btn" type="button" data-pro="1">Импорт JSON</button>
+          </div>
+          <p id="data-msg" class="muted small" hidden></p>
+        </section>
+
+        <!-- ── Pro-настройки ────────────────────────────────── -->
+        <section class="card" id="pro-settings">
+          <div class="card-head">
+            <h2>Настройки Pro</h2>
+            <span id="pro-lock" class="badge badge-free" hidden>только Pro</span>
+          </div>
+
+          <label class="field-label" for="font">Размер шрифта списка: <span id="font-val">14</span> px</label>
+          <input id="font" type="range" min="11" max="22" value="14" class="range" />
+
+          <label class="toggle-row" style="margin-top: 12px">
+            <span>Компактный режим окна</span>
+            <input id="compact" type="checkbox" />
+          </label>
+          <label class="toggle-row" style="margin-top: 10px">
+            <span>Запоминать позицию и размер окна</span>
+            <input id="win-memory" type="checkbox" />
+          </label>
+
+          <label class="field-label" for="max-age" style="margin-top: 12px">
+            Автоочистка: удалять незакреплённое старше (дней, 0 = выкл)
+          </label>
+          <div class="btn-row" style="margin-top: 6px">
+            <input id="max-age" class="text-input short" type="number" min="0" max="3650" value="0" />
+            <button id="max-age-save" class="btn" type="button">Применить</button>
+          </div>
+        </section>
+
+        <!-- ── Безопасность ─────────────────────────────────── -->
+        <section class="card">
+          <div class="card-head"><h2>Безопасность</h2></div>
+          <p class="muted small">
+            Пауза записи и игнор-приложения доступны всем. Мастер-пароль — Pro.
+            Лицензия и пароль защищаются DPAPI (привязка к учётной записи Windows).
+          </p>
+          <div id="master-off">
+            <label class="field-label" for="master-new">Установить мастер-пароль</label>
+            <div class="btn-row" style="margin-top: 6px">
+              <input id="master-new" class="text-input" type="password" placeholder="Новый пароль" data-pro="1" />
+              <button id="master-set" class="btn" type="button" data-pro="1">Установить</button>
+            </div>
+          </div>
+          <div id="master-on" hidden>
+            <p class="muted small">🔒 Мастер-пароль установлен.</p>
+            <label class="toggle-row">
+              <span>Автоблокировка через (мин, 0 = выкл)</span>
+              <input id="auto-lock" class="text-input short" type="number" min="0" max="240" value="0" />
+            </label>
+            <div class="btn-row">
+              <input id="master-cur" class="text-input" type="password" placeholder="Текущий пароль" />
+              <button id="master-remove" class="btn btn-ghost-danger" type="button">Снять пароль</button>
+            </div>
+          </div>
+          <div id="master-msg" class="hint-inline" hidden></div>
+        </section>
+
+        <!-- ── Обновления ───────────────────────────────────── -->
+        <section class="card">
+          <div class="card-head"><h2>Обновления</h2></div>
+          <label class="toggle-row">
+            <span>
+              Проверять обновления автоматически
+              <span class="sub">Выключите для полностью офлайн-режима (ноль сетевых запросов).</span>
+            </span>
+            <input id="auto-update" type="checkbox" />
+          </label>
+          <div class="btn-row">
+            <button id="check-update" class="btn" type="button">Проверить сейчас</button>
+          </div>
+          <p id="update-status" class="muted small" hidden></p>
+        </section>
+
+        <!-- ── Поддержка / контакт ──────────────────────────── -->
+        <section class="card">
+          <div class="card-head"><h2>Поддержать и связаться</h2></div>
+          <div class="btn-row">
+            <button id="donate" class="btn" type="button">☕ Поддержать автора</button>
+            <button id="contact" class="btn" type="button">✈ Написать в Telegram</button>
+          </div>
+        </section>
+
+        <footer class="foot">
+          <span>ClipVault <span id="app-version">1.2.0</span></span>
+          <span class="muted">Локально · без сервера · без телеметрии</span>
+        </footer>
+      </div>
+    </div>
+    <script type="module" src="/src/settings.ts"></script>
+  </body>
+</html>

@@ -1,0 +1,11 @@
+{
+  "version": "2.0.2",
+  "notes": "Обновление ClipVault 2.0.2.",
+  "pub_date": "2026-09-15T08:58:53.639Z",
+  "platforms": {
+    "windows-x86_64": {
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVUWTFhSmlVczJ2K1lGc24zUHRrekNZMWdRWFRhaElZbmJaUEhuVHZrenI3Y3lWb0U0a1RHek9LK1NKWlZNL09QKzh4R3pCMHVvaWpTNmltb0V6UlRYVTgyeHNwQWJ3MndFPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg5NDYyNzMyCWZpbGU6Q2xpcFZhdWx0XzIuMC4yX3g2NC1zZXR1cC5leGUKQVJSRTB0WlVUcjI2NDJseC9XblhoemhzQzNiYk04R3BHMXRNTVFBRHVRUXJtMXQ1TnN5d2ZJblBzUlp0WWQ2TmhENW56SkQxNndkTEZWZ3J2NTZIRGc9PQo=",
+      "url": "https://s3.twcstorage.ru/prisma-prava/updates/ClipVault_2.0.2_x64-setup.exe"
+    }
+  }
+}

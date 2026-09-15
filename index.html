@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ClipVault</title>
+  </head>
+  <body>
+    <div id="app">
+      <header class="topbar">
+        <div class="brand" aria-hidden="true" title="ClipVault">
+          <svg class="ico" viewBox="0 0 24 24"><rect x="5" y="4.5" width="14" height="16.5" rx="2.5"/><rect x="9" y="2.5" width="6" height="3.6" rx="1.4"/><circle cx="12" cy="13.5" r="3"/><path d="M12 10.9v1.1M12 15v1.1M14.6 13.5h-1.1M10.5 13.5H9.4"/></svg>
+        </div>
+        <div class="search">
+          <span class="search-icon" aria-hidden="true">
+            <svg class="ico" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.3-4.3"/></svg>
+          </span>
+          <input id="search" type="text" placeholder="Поиск в истории" autocomplete="off" spellcheck="false" />
+        </div>
+        <button id="clear" class="clear-btn" type="button" title="Очистить историю (закреплённые останутся)">
+          <svg class="ico" viewBox="0 0 24 24"><path d="M4 7h16M9.5 7V5.2A1.2 1.2 0 0110.7 4h2.6a1.2 1.2 0 011.2 1.2V7M6.5 7l.9 12.2a1.5 1.5 0 001.5 1.4h6.2a1.5 1.5 0 001.5-1.4L17.5 7M10 11v6M14 11v6"/></svg>
+        </button>
+        <button id="support" class="icon-btn" type="button" title="Поддержать разработчика">
+          <svg class="ico" viewBox="0 0 24 24"><path d="M12 20.5C6 16.7 3.5 13.3 3.5 9.8A4.3 4.3 0 0112 7.4a4.3 4.3 0 018.5 2.4c0 3.5-2.5 6.9-8.5 10.7z"/></svg>
+        </button>
+        <button id="settings" class="icon-btn" type="button" title="Настройки">
+          <svg class="ico" viewBox="0 0 24 24"><path d="M3 8h11.4M19.4 8H21M3 16h3.6M11.4 16H21"/><circle cx="17" cy="8" r="2.4"/><circle cx="9" cy="16" r="2.4"/></svg>
+        </button>
+      </header>
+
+      <nav class="tabs" id="tabs">
+        <button class="tab active" data-filter="all">Все</button>
+        <button class="tab" data-filter="pinned">Закреплённые</button>
+        <button class="tab" data-filter="text">Текст</button>
+        <button class="tab" data-filter="image">Фото</button>
+        <button class="tab" data-filter="files">Файлы</button>
+        <button class="tab" data-filter="colors">Цвета</button>
+        <button class="tab" data-filter="urls">Ссылки</button>
+        <button id="filter-toggle" class="tab" type="button" title="Фильтры (Pro)">
+          <svg class="ico" viewBox="0 0 24 24"><path d="M4 5.5h16l-6 7.2v5.3l-4 2v-7.3z"/></svg>
+        </button>
+      </nav>
+
+      <div id="filter-bar" class="filter-bar" hidden>
+        <select id="f-source" class="f-input"><option value="">Все источники</option></select>
+        <select id="f-since" class="f-input">
+          <option value="0">За всё время</option>
+          <option value="1">За сегодня</option>
+          <option value="7">За 7 дней</option>
+          <option value="30">За 30 дней</option>
+        </select>
+        <input id="f-tag" class="f-input" type="text" placeholder="тег" spellcheck="false" />
+        <input id="f-regex" class="f-input" type="text" placeholder="regex по тексту" spellcheck="false" />
+        <button id="f-clear" class="f-clear" type="button">Сброс</button>
+      </div>
+
+      <main id="list" class="list" tabindex="0"></main>
+
+      <div id="slots" class="slots" hidden></div>
+
+      <div id="empty" class="empty" hidden>
+        <p>Пока пусто.</p>
+        <p class="hint">Скопируйте что-нибудь (Ctrl+C) — оно появится здесь.</p>
+      </div>
+
+      <div id="ctxmenu" class="ctxmenu" hidden></div>
+
+      <div id="confirm" class="confirm" hidden>
+        <div class="confirm-box">
+          <p class="confirm-text">Очистить историю?<br /><span class="confirm-sub">Закреплённые элементы останутся.</span></p>
+          <div class="confirm-bar">
+            <button id="confirm-cancel" type="button">Отмена</button>
+            <button id="confirm-ok" type="button" class="danger">Очистить</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="lightbox" class="lightbox" hidden>
+        <img id="lb-img" class="lightbox-img" alt="предпросмотр" />
+        <div class="lightbox-bar">
+          <button id="lb-copy">Копировать</button>
+          <button id="lb-close">Закрыть</button>
+        </div>
+      </div>
+
+      <div id="lock" class="lock" hidden>
+        <div class="lock-box">
+          <div class="lock-icon" aria-hidden="true">
+            <svg class="ico" viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="9.5" rx="2"/><path d="M8 10.5V8a4 4 0 018 0v2.5"/><circle cx="12" cy="14.7" r="1.3"/><path d="M12 16v1.6"/></svg>
+          </div>
+          <p class="lock-title">ClipVault заблокирован</p>
+          <input id="lock-pw" type="password" class="lock-input" placeholder="Мастер-пароль" />
+          <div id="lock-err" class="lock-err" hidden>Неверный пароль</div>
+          <button id="lock-unlock" type="button" class="lock-btn">Разблокировать</button>
+        </div>
+      </div>
+
+      <div id="colorbox" class="colorbox" hidden>
+        <div class="colorbox-box">
+          <div id="cb-swatch" class="cb-swatch"></div>
+          <div id="cb-rows" class="cb-rows"></div>
+          <div id="cb-upsell" class="cb-upsell" hidden>
+            <p>🎨 Конвертация и копирование форматов (HEX / RGB / HSL) — в ClipVault <b>Pro</b>.</p>
+            <button id="cb-buy" type="button" class="cb-buy">Открыть за 399 ₽</button>
+          </div>
+          <button id="cb-close" type="button" class="cb-close">Закрыть</button>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

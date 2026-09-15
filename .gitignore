@@ -1,0 +1,52 @@
+# ─────────────────────────────────────────────────────────────
+# Секреты и ключи — НИКОГДА не коммитить
+# (приватные ключи подписи обновлений и лицензий, S3-креды и т.п.)
+# ─────────────────────────────────────────────────────────────
+*.key
+*.pem
+*.p12
+*.pfx
+*.hex
+*clipvault-updater*
+*clipvault-license*
+license.key
+.env
+.env.*
+!.env.example
+.aws/
+
+# ── Логи ──
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# ── Зависимости и сборка фронтенда ──
+node_modules
+dist
+dist-ssr
+*.local
+
+# ── Артефакты релиза (генерируются, лежат на S3 / в Releases) ──
+latest.json
+*_x64-setup.exe
+*.sig
+
+# ── Rust / Tauri (см. также src-tauri/.gitignore) ──
+target/
+
+# ── Редакторы и ОС ──
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
