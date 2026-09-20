@@ -25,6 +25,11 @@ buffer_pc/
 ├── package.json               npm-скрипты, deps (@tauri-apps/api + plugin-updater/process/opener)
 ├── vite.config.ts             Vite: порт 1420, игнор src-tauri, 2 страницы (main + settings)
 ├── tsconfig.json              strict, ES2020, noUnusedLocals
+├── docs/                      ── САЙТ-ЛЕНДИНГ (GitHub Pages, main /docs) ──
+│   ├── index.html             одностраничник: герой + макет окна на CSS, возможности, приватность, Free/Pro, FAQ
+│   ├── styles.css             та же «Graphite instrument», токены OKLCH, светлая/тёмная + ручной тумблер
+│   ├── release.json           версия/размер/ссылка на установщик (переписывает publish-update.mjs)
+│   └── .nojekyll, favicon.ico, icon.png
 ├── src/                       ── ФРОНТЕНД ──
 │   ├── main.ts                ★ окно истории: refresh/render/действия/цвета/URL/метки/слоты/блокировка/фасеты
 │   ├── settings.ts            окно настроек: лицензия/общие/данные/Pro/безопасность/обновления
@@ -219,6 +224,9 @@ source_app(v2), category(v3), tags(v3)`
 - **Dev:** `npm install` → `npm run tauri dev`.
 - **Release:** `npm run tauri build` → `src-tauri/target/release/clipvault.exe` + NSIS в `bundle/`.
 - **Диагностика БД:** `cargo run --example dump | ftscheck -- <term> | ftsdiag` (из `src-tauri/`).
+- **Сайт:** `docs/` → GitHub Pages (`main` / `/docs`), `https://wufcorp.github.io/ClipVault/`.
+  Локально — `npx vite docs`. Версию на сайте обновляет `npm run publish-update` (пишет `docs/release.json`),
+  дальше нужен коммит и пуш `docs/`. См. [RELEASE.md](RELEASE.md) §6.7.
 
 ---
 
@@ -247,4 +255,5 @@ source_app(v2), category(v3), tags(v3)`
 | Настройки / обновления | `settings.rs` + `settings.html`/`settings.ts` + `tauri.conf.json` (plugins.updater) |
 | Цвета (Pro) | `src/color.ts` + `main.ts` (swatch, colorbox) |
 | Установщик | `tauri.conf.json` (bundle.windows.nsis) |
+| Сайт-лендинг | `docs/index.html` + `docs/styles.css`; версия и ссылка — `docs/release.json` |
 ```

@@ -12,7 +12,7 @@
 Переменные окружения для подписи обновлений (PowerShell):
 ```powershell
 $env:TAURI_SIGNING_PRIVATE_KEY = Get-Content "путь\clipvault-updater.key" -Raw
-$env:TAURI_SIGNING_PRIVATE_KEY_PASSWORD = ""   # ключ без пароля
+$env:TAURI_SIGNING_PRIVATE_KEY_PASSWORD = "<пароль>"   # ключ С ПАРОЛЕМ, без него подпись упадёт в конце сборки
 ```
 
 S3 (Timeweb) — Access/Secret Key владельца в отдельном профиле/менеджере секретов
@@ -85,6 +85,23 @@ Habr / Product Hunt / Reddit. Упор: приватность (единстве
 проверка обновлений, отключаема; никакой телеметрии/Яндекса) и «399 ₽ разово, на всех
 своих ПК». Донат Boosty и контакт Telegram — в настройках.
 
+## 6.7 Сайт-лендинг (GitHub Pages)
+
+Исходники сайта — в `docs/` (`index.html`, `styles.css`, `release.json`, иконки, `.nojekyll`).
+Статика без сборки и без сторонних запросов: платформенные шрифты, никаких CDN и трекеров.
+
+**Включить один раз:** GitHub → репозиторий → Settings → Pages → Source = «Deploy from a branch»,
+ветка `main`, папка `/docs` → Save. Через минуту сайт живёт на
+`https://wufcorp.github.io/ClipVault/`. Там же в Settings → About прописать его как Website.
+⚠️ Не выбирать корень `/`: в корне репозитория лежит `index.html` **окна приложения**.
+
+**Обновлять:** `npm run publish-update` сам переписывает `docs/release.json`
+(версия, размер, ссылка на установщик). После релиза остаётся закоммитить `docs/` и запушить —
+страница подхватит новые значения. Кнопка «Скачать» ведёт на установщик в S3,
+рядом ссылка на GitHub Releases.
+
+**Посмотреть локально:** `npx vite docs` (или конфигурация `site` в `.claude/launch.json`).
+
 ## Выпуск Pro-ключа покупателю (после оплаты)
 
 ```powershell
@@ -93,3 +110,14 @@ cd src-tauri
 cargo run --example genkey -- buyer@example.com
 ```
 Вывод (строка `seg1.seg2`) — ключ покупателю. Активация в приложении: Настройки → вставить ключ.
+
+### Склад ключей заранее (без email)
+
+```powershell
+$env:CLIPVAULT_LICENSE_PRIVATE_KEY = Get-Content "$env:USERPROFILE\.tauri\clipvault-license.hex" -Raw
+cd src-tauri
+cargo run --release --example genkey -- --count 100 --out "$env:USERPROFILE\.tauri\clipvault-keys-001.csv"
+```
+CSV `id,key,sent_to,sent_at,payment` (UTF-8). Выдал ключ — заполни строку (email, дата, id платежа ЮKassa).
+Уже существующий файл не перезаписывается. Файл = готовые лицензии: хранить рядом с приватным ключом, не в репо/Obsidian.
+Используй `--out`, а не `>`: в PowerShell 5.1 перенаправление пишет UTF-16.

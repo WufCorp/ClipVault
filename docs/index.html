@@ -1,0 +1,553 @@
+<!doctype html>
+<html lang="ru" prefix="og: https://ogp.me/ns#">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ClipVault — менеджер истории буфера обмена для Windows</title>
+<meta name="description" content="ClipVault ловит текст, картинки и файлы, хранит историю локально и открывается по Ctrl+Shift+V с мгновенным поиском. Без облака, аккаунта и телеметрии. Windows 10/11 x64." />
+<link rel="canonical" href="https://wufcorp.github.io/ClipVault/" />
+<link rel="icon" href="favicon.ico" sizes="any" />
+<link rel="icon" href="icon.png" type="image/png" />
+<meta name="theme-color" content="#f2efe9" media="(prefers-color-scheme: light)" />
+<meta name="theme-color" content="#1b1c21" media="(prefers-color-scheme: dark)" />
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="ClipVault" />
+<meta property="og:locale" content="ru_RU" />
+<meta property="og:url" content="https://wufcorp.github.io/ClipVault/" />
+<meta property="og:title" content="ClipVault — буфер обмена, который помнит и ищет" />
+<meta property="og:description" content="История буфера обмена для Windows: текст, картинки и файлы, мгновенный поиск, всё локально. Установщик 3,5 МБ, без телеметрии." />
+<meta property="og:image" content="https://wufcorp.github.io/ClipVault/icon.png" />
+<meta name="twitter:card" content="summary" />
+<link rel="stylesheet" href="styles.css" />
+<script>
+  /* тема выбирается до первой отрисовки, чтобы не мигало */
+  try {
+    var t = localStorage.getItem("cv-theme");
+    if (t === "dark" || t === "light") document.documentElement.dataset.theme = t;
+  } catch (e) {}
+</script>
+</head>
+<body>
+
+<a class="skip" href="#main">К основному содержимому</a>
+
+<!-- ─────────────── Шапка ─────────────── -->
+<header class="nav" id="nav">
+  <div class="wrap nav__in">
+    <a class="brand" href="./" aria-label="ClipVault — на главную">
+      <span class="brand__mark" aria-hidden="true">
+        <svg class="ico" viewBox="0 0 24 24"><rect x="5" y="4.5" width="14" height="16.5" rx="2.5"/><rect x="9" y="2.5" width="6" height="3.6" rx="1.4"/><circle cx="12" cy="13.5" r="3"/><path d="M12 10.9v1.1M12 15v1.1M14.6 13.5h-1.1M10.5 13.5H9.4"/></svg>
+      </span>
+      ClipVault
+    </a>
+
+    <nav class="nav__links" aria-label="Разделы">
+      <a href="#features">Возможности</a>
+      <a href="#privacy">Приватность</a>
+      <a href="#pro">Pro</a>
+      <a href="#faq">Вопросы</a>
+    </nav>
+
+    <span class="nav__spacer"></span>
+
+    <div class="nav__actions">
+      <button class="icon-btn" id="theme" type="button" title="Светлая / тёмная тема" aria-label="Переключить тему">
+        <svg class="ico" viewBox="0 0 24 24" id="theme-ico"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M4.2 12H2M22 12h-2.2M6.3 6.3L4.8 4.8M19.2 19.2l-1.5-1.5M17.7 6.3l1.5-1.5M4.8 19.2l1.5-1.5"/></svg>
+      </button>
+      <a class="btn btn--ghost" href="https://github.com/WufCorp/ClipVault" rel="noopener">
+        <svg class="ico ico--fill" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.4 7.4 0 0 1 2-.27c.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
+        <span>GitHub</span>
+      </a>
+      <a class="btn btn--primary" href="https://s3.twcstorage.ru/prisma-prava/updates/ClipVault_2.0.3_x64-setup.exe" data-rel="download">
+        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5v11M7.5 10.5L12 15l4.5-4.5M4.5 18.5h15"/></svg>
+        <span>Скачать</span>
+      </a>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+
+<!-- ─────────────── Герой ─────────────── -->
+<section class="hero">
+  <div class="wrap hero__in">
+    <div>
+      <span class="tagline mono"><span class="dot" aria-hidden="true"></span>Windows 10/11 · x64 · <span data-rel="size">3,5</span> МБ</span>
+
+      <h1>Буфер обмена, который <em>помнит и ищет</em></h1>
+
+      <p class="hero__lead">
+        ClipVault ловит текст, картинки и файлы, хранит историю локально и всплывает
+        по <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>V</kbd> с мгновенным полнотекстовым
+        поиском. Без облака, без аккаунта, без телеметрии.
+      </p>
+
+      <div class="hero__cta">
+        <a class="btn btn--primary btn--lg" href="https://s3.twcstorage.ru/prisma-prava/updates/ClipVault_2.0.3_x64-setup.exe" data-rel="download">
+          <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5v11M7.5 10.5L12 15l4.5-4.5M4.5 18.5h15"/></svg>
+          Скачать для Windows
+        </a>
+        <a class="btn btn--lg" href="https://github.com/WufCorp/ClipVault" rel="noopener">
+          <svg class="ico ico--fill" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.4 7.4 0 0 1 2-.27c.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
+          Исходники
+        </a>
+      </div>
+
+      <p class="hero__meta mono">
+        <span data-rel="version">v2.0.3</span>
+        <span aria-hidden="true">·</span>
+        <span>бесплатно</span>
+        <span aria-hidden="true">·</span>
+        <a href="https://github.com/WufCorp/ClipVault/releases" rel="noopener">все версии на GitHub</a>
+      </p>
+    </div>
+
+    <!-- Макет окна истории: та же вёрстка и токены, что в приложении -->
+    <div class="shot">
+      <span class="shot__hint"><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>V</kbd> — и оно здесь</span>
+      <div class="win" role="img" aria-label="Окно истории ClipVault: строка поиска, вкладки по типам, список скопированных элементов и слоты быстрой вставки">
+        <div class="win__bar">
+          <span class="brand__mark" aria-hidden="true">
+            <svg class="ico" viewBox="0 0 24 24"><rect x="5" y="4.5" width="14" height="16.5" rx="2.5"/><rect x="9" y="2.5" width="6" height="3.6" rx="1.4"/><circle cx="12" cy="13.5" r="3"/><path d="M12 10.9v1.1M12 15v1.1M14.6 13.5h-1.1M10.5 13.5H9.4"/></svg>
+          </span>
+          <span class="win__title">ClipVault</span>
+          <span class="win__dots" aria-hidden="true"><i></i><b></b><u></u></span>
+        </div>
+
+        <div class="win__body">
+          <div class="win__top">
+            <div class="win__search">
+              <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.3-4.3"/></svg>
+              Поиск в истории
+            </div>
+            <span class="win__ibtn" aria-hidden="true"><svg class="ico" viewBox="0 0 24 24"><path d="M4 7h16M9.5 7V5.2A1.2 1.2 0 0110.7 4h2.6a1.2 1.2 0 011.2 1.2V7M6.5 7l.9 12.2a1.5 1.5 0 001.5 1.4h6.2a1.5 1.5 0 001.5-1.4L17.5 7"/></svg></span>
+            <span class="win__ibtn" aria-hidden="true"><svg class="ico" viewBox="0 0 24 24"><path d="M12 20.5C6 16.7 3.5 13.3 3.5 9.8A4.3 4.3 0 0112 7.4a4.3 4.3 0 018.5 2.4c0 3.5-2.5 6.9-8.5 10.7z"/></svg></span>
+            <span class="win__ibtn" aria-hidden="true"><svg class="ico" viewBox="0 0 24 24"><path d="M3 8h11.4M19.4 8H21M3 16h3.6M11.4 16H21"/><circle cx="17" cy="8" r="2.4"/><circle cx="9" cy="16" r="2.4"/></svg></span>
+          </div>
+
+          <div class="win__tabs" aria-hidden="true">
+            <span class="win__tab" data-on>Все</span>
+            <span class="win__tab">Закреплённые</span>
+            <span class="win__tab">Текст</span>
+            <span class="win__tab">Фото</span>
+            <span class="win__tab">Файлы</span>
+            <span class="win__tab">Цвета</span>
+            <span class="win__tab">Ссылки</span>
+          </div>
+
+          <div class="win__list" aria-hidden="true">
+            <div class="row" data-sel>
+              <span class="row__ico"><svg class="ico" viewBox="0 0 24 24"><path d="M6 4.5h9l4 4v11a1 1 0 01-1 1H6a1 1 0 01-1-1v-14a1 1 0 011-1zM14.5 4.8V9h4.2"/></svg></span>
+              <span class="row__txt">
+                <span class="row__title code">npm run publish-update</span>
+                <span class="row__meta">Сегодня, 11:52 · ×8 · <span class="chip">WindowsTerminal.exe</span></span>
+              </span>
+              <span class="row__pin"><svg class="ico" viewBox="0 0 24 24"><path d="M9 3.5h6l-.8 5.2 3.3 3v1.6h-5v6.2l-.5 1-.5-1v-6.2h-5v-1.6l3.3-3z"/></svg></span>
+            </div>
+
+            <div class="row">
+              <span class="row__ico"><svg class="ico" viewBox="0 0 24 24"><path d="M10 13.8a3.6 3.6 0 005.3.3l2.6-2.6a3.6 3.6 0 00-5-5l-1.3 1.3"/><path d="M14 10.2a3.6 3.6 0 00-5.3-.3l-2.6 2.6a3.6 3.6 0 005 5l1.3-1.3"/></svg></span>
+              <span class="row__txt">
+                <span class="row__title">github.com/WufCorp/ClipVault</span>
+                <span class="row__meta">Сегодня, 13:35 · <span class="chip">github.com</span> · UTM вычищены</span>
+              </span>
+            </div>
+
+            <div class="row">
+              <span class="row__ico"><span class="swatch" style="background:#f5a524"></span></span>
+              <span class="row__txt">
+                <span class="row__title code">#F5A524</span>
+                <span class="row__meta">rgb(245 165 36) · hsl(37 91% 55%)</span>
+              </span>
+            </div>
+
+            <div class="row">
+              <span class="row__ico"><svg class="ico" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="14" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="M4 16.5l4.5-4 3.5 3 3-2.5 5 4.5"/></svg></span>
+              <span class="row__txt">
+                <span class="thumb"></span>
+                <span class="row__meta">Сегодня, 13:35 · 1920×1080 · lightshot.exe</span>
+              </span>
+            </div>
+          </div>
+
+          <div class="win__slots" aria-hidden="true">
+            <span class="slot" data-on>1</span><span class="slot">2</span><span class="slot">3</span>
+            <span class="slot">4</span><span class="slot">5</span><span class="slot">6</span>
+            <span class="slot">7</span><span class="slot">8</span><span class="slot">9</span>
+            <span class="slot">10</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─────────────── Цифры ─────────────── -->
+<section class="stats">
+  <div class="wrap stats__in">
+    <div class="stat"><b data-rel="size">3,5</b><span>МБ установщик — Tauri, а не Electron</span></div>
+    <div class="stat"><b>1</b><span>сетевой запрос во всём приложении — и тот отключается</span></div>
+    <div class="stat"><b>200 / 10 000</b><span>элементов истории: Free / Pro</span></div>
+    <div class="stat"><b>399 ₽</b><span>разово за Pro — без подписки и аккаунта</span></div>
+  </div>
+</section>
+
+<!-- ─────────────── Возможности ─────────────── -->
+<section class="section rise" id="features">
+  <div class="wrap">
+    <div class="section__head">
+      <span class="mono"><span class="num">01</span> — бесплатно</span>
+      <h2>Нормальный Win+V</h2>
+      <p>Всё, чего не хватает встроенной истории Windows. Без оговорок и без Pro-гейта.</p>
+    </div>
+
+    <div class="grid3">
+      <article class="card">
+        <span class="card__ico"><svg class="ico" viewBox="0 0 24 24"><path d="M13 2.5L4.5 13.5H11l-.8 8 9.3-11.4H13z"/></svg></span>
+        <h3>Захват без polling</h3>
+        <p>Отдельный поток слушает системные события буфера обмена. Ноль холостого хода и нагрузки в простое.</p>
+      </article>
+
+      <article class="card">
+        <span class="card__ico"><svg class="ico" viewBox="0 0 24 24"><rect x="4" y="4" width="11" height="11" rx="2"/><path d="M8 18.5a2 2 0 002 2h8a2 2 0 002-2v-8a2 2 0 00-2-2"/></svg></span>
+        <h3>Текст, картинки и файлы</h3>
+        <p>Картинки сохраняются PNG-файлами, в базе только путь и превью. Файлы возвращаются в буфер как файлы.</p>
+      </article>
+
+      <article class="card">
+        <span class="card__ico"><svg class="ico" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.3-4.3"/></svg></span>
+        <h3>Мгновенный поиск</h3>
+        <p>SQLite FTS5: полнотекстовый, с кириллицей и префиксным поиском прямо по ходу набора.</p>
+      </article>
+
+      <article class="card">
+        <span class="card__ico"><svg class="ico" viewBox="0 0 24 24"><path d="M4 8.5l8-4.5 8 4.5-8 4.5z"/><path d="M4 12.5l8 4.5 8-4.5M4 16l8 4.5 8-4.5"/></svg></span>
+        <h3>Дедупликация</h3>
+        <p>Повторное копирование не плодит дубли: запись поднимается наверх, а счётчик растёт.</p>
+      </article>
+
+      <article class="card">
+        <span class="card__ico"><svg class="ico" viewBox="0 0 24 24"><path d="M12 3.2l7 2.6v5.4c0 4.2-2.9 7.6-7 9.6-4.1-2-7-5.4-7-9.6V5.8z"/><path d="M10 11.5v3M14 11.5v3"/></svg></span>
+        <h3>Пауза и игнор-список</h3>
+        <p>Менеджеры паролей и банк-клиенты в историю не попадают. Безопасность за деньги не прячем.</p>
+      </article>
+
+      <article class="card">
+        <span class="card__ico"><svg class="ico" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="14" rx="2"/><path d="M3.5 9h17"/><path d="M8 15.5h8"/></svg></span>
+        <h3>Трей, автозапуск, обновления</h3>
+        <p>Живёт в трее, стартует с Windows, один экземпляр. Обновления подписаны и ставятся в один клик.</p>
+      </article>
+    </div>
+
+    <p class="note">
+      <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.8v.6"/></svg>
+      <span>Ещё бесплатно: вкладки по типам, закрепление, контекстное меню, экспорт в TXT и JSON,
+      свой хоткей вызова, светлая и тёмная тема. Лимит истории — 200 элементов.</span>
+    </p>
+  </div>
+</section>
+
+<!-- ─────────────── Приватность ─────────────── -->
+<section class="section rise" id="privacy">
+  <div class="wrap">
+    <div class="section__head">
+      <span class="mono"><span class="num">02</span> — приватность</span>
+      <h2>Буфер обмена — это пароли, переписка и реквизиты</h2>
+      <p>Поэтому история никуда не уходит, а весь сетевой трафик приложения помещается в четыре строки.</p>
+    </div>
+
+    <div class="split">
+      <ul class="checks">
+        <li>
+          <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 12.5l5 5 10-11"/></svg>
+          <span><b>Только локально</b><span>База и картинки лежат в <code>%APPDATA%\ClipVault\</code>. Ни сервера, ни облака, ни аккаунта.</span></span>
+        </li>
+        <li>
+          <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 12.5l5 5 10-11"/></svg>
+          <span><b>Ноль телеметрии</b><span>Нет аналитических SDK и стороннего ПО в установщике. Ничего не «в комплекте».</span></span>
+        </li>
+        <li>
+          <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 12.5l5 5 10-11"/></svg>
+          <span><b>Лицензия проверяется офлайн</b><span>Подпись Ed25519 и публичный ключ внутри .exe. Сервера активации не существует.</span></span>
+        </li>
+        <li>
+          <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 12.5l5 5 10-11"/></svg>
+          <span><b>Код открыт для проверки</b><span>Исходники на GitHub — можно прочитать, что происходит, и собрать самому.</span></span>
+        </li>
+      </ul>
+
+      <div class="term">
+        <div class="term__bar">
+          <span class="mono">весь исходящий трафик</span>
+        </div>
+<pre><span class="c"># проверка обновлений — раз при старте</span>
+GET <span class="a">s3.twcstorage.ru/…/latest.json</span>
+    <span class="c">уходит:</span> версия, платформа
+    <span class="c">не уходит:</span> история, тексты, картинки
+
+<span class="c"># всё. больше запросов нет</span>
+<span class="g">Настройки → «Проверять автоматически» = выкл
+→ ноль сетевых запросов</span></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─────────────── Pro ─────────────── -->
+<section class="section rise" id="pro">
+  <div class="wrap">
+    <div class="section__head">
+      <span class="mono"><span class="num">03</span> — цена</span>
+      <h2>Одна честная цена, один раз</h2>
+      <p>Без подписки, без аккаунта, без зачёркнутых «старых цен». Ключ работает на всех ваших ПК.</p>
+    </div>
+
+    <div class="plans">
+      <div class="plan plan--free">
+        <div class="plan__top">
+          <h3>Free</h3>
+          <span class="plan__price">0 ₽</span>
+        </div>
+        <p class="plan__sub">Полноценный менеджер буфера. Навсегда.</p>
+        <ul>
+          <li><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 12.5l5 5 10-11"/></svg>История на 200 элементов</li>
+          <li><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 12.5l5 5 10-11"/></svg>Текст, картинки, файлы, дедупликация</li>
+          <li><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 12.5l5 5 10-11"/></svg>Поиск FTS5, вкладки, закрепление</li>
+          <li><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 12.5l5 5 10-11"/></svg>Пауза записи и игнор-приложения</li>
+          <li><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 12.5l5 5 10-11"/></svg>Свой хоткей, экспорт TXT/JSON</li>
+          <li><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 12.5l5 5 10-11"/></svg>Трей, автозапуск, авто-обновления</li>
+        </ul>
+        <a class="btn" href="https://s3.twcstorage.ru/prisma-prava/updates/ClipVault_2.0.3_x64-setup.exe" data-rel="download">Скачать бесплатно</a>
+        <p class="plan__note">Установщик <span data-rel="size">3,5</span> МБ · Windows 10/11 x64</p>
+      </div>
+
+      <div class="plan plan--pro">
+        <div class="plan__top">
+          <h3>Pro</h3>
+          <span class="plan__price">399 ₽ <small>разово</small></span>
+        </div>
+        <p class="plan__sub">Объём, организация и инструменты — всё по хоткеям.</p>
+        <ul>
+          <li><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 12.5l5 5 10-11"/></svg>До 10 000 элементов + автоочистка по правилам</li>
+          <li><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 12.5l5 5 10-11"/></svg>Фасеты поиска: дата, источник, тег, regex</li>
+          <li><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 12.5l5 5 10-11"/></svg>Умные коллекции: цвета и ссылки</li>
+          <li><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 12.5l5 5 10-11"/></svg>Цвета HEX/RGB/HSL с превью и конвертацией</li>
+          <li><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 12.5l5 5 10-11"/></svg>Вставка без форматирования, чистка URL от UTM</li>
+          <li><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 12.5l5 5 10-11"/></svg>Слоты и быстрая вставка по <kbd>Alt</kbd>+<kbd>1…9</kbd></li>
+          <li><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 12.5l5 5 10-11"/></svg>Категории, цветовые метки, импорт истории</li>
+          <li><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 12.5l5 5 10-11"/></svg>Картинки: сохранить, путь, метаданные</li>
+          <li><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 12.5l5 5 10-11"/></svg>Мастер-пароль с автоблокировкой</li>
+          <li><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 12.5l5 5 10-11"/></svg>Память размера и позиции окна, размер шрифта</li>
+        </ul>
+        <a class="btn btn--primary" href="https://yookassa.ru/my/i/aqiEEXXqILcr/l" rel="noopener">Купить Pro за 399 ₽</a>
+        <p class="plan__note">Ключ придёт на email, указанный при оплате — обычно в течение 24 часов.</p>
+      </div>
+    </div>
+
+    <p class="note">
+      <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5C6 16.7 3.5 13.3 3.5 9.8A4.3 4.3 0 0112 7.4a4.3 4.3 0 018.5 2.4c0 3.5-2.5 6.9-8.5 10.7z"/></svg>
+      <span>Pro — ещё и способ поддержать проект: его пилит один человек.
+      Лицензия не нужна, но хочется поддержать — есть
+      <a href="https://boosty.to/wufcorp/donate" rel="noopener">Boosty</a>. Это два независимых пути:
+      донат не выдаёт Pro, покупка Pro не считается донатом.</span>
+    </p>
+  </div>
+</section>
+
+<!-- ─────────────── Вопросы ─────────────── -->
+<section class="section rise" id="faq">
+  <div class="wrap">
+    <div class="section__head">
+      <span class="mono"><span class="num">04</span> — вопросы</span>
+      <h2>Короткие ответы</h2>
+    </div>
+
+    <div class="faq">
+      <details open>
+        <summary>Чем это лучше встроенного Win+V?</summary>
+        <div class="answer">
+          <p>Полнотекстовым поиском по всей истории, файлами и картинками с превью, дедупликацией,
+          закреплением, фильтрами по типу и источнику, своим хоткеем вызова и игнор-списком приложений.
+          И история остаётся локальной: ClipVault ничего не синхронизирует в облако.</p>
+        </div>
+      </details>
+
+      <details>
+        <summary>Где хранятся мои данные?</summary>
+        <div class="answer">
+          <p>В <code>%APPDATA%\ClipVault\</code>: база SQLite, папка <code>images/</code> с картинками
+          и лог. Удалить историю можно из самого приложения или просто снеся эту папку.</p>
+        </div>
+      </details>
+
+      <details>
+        <summary>Windows ругается при установке — это нормально?</summary>
+        <div class="answer">
+          <p>Установщик пока без коммерческого сертификата подписи кода, поэтому SmartScreen может
+          показать предупреждение: «Подробнее» → «Выполнить в любом случае». Сами обновления
+          подписаны ключом разработчика и проверяются приложением, а исходники открыты —
+          при желании соберите сборку сами.</p>
+        </div>
+      </details>
+
+      <details>
+        <summary>Как активировать Pro и можно ли перенести на другой ПК?</summary>
+        <div class="answer">
+          <p>После оплаты вы получаете строку-ключ на email. Настройки → «Лицензия» → вставить ключ →
+          Pro включается сразу, офлайн. Ключ не привязан к железу: та же строка работает на всех
+          ваших компьютерах.</p>
+        </div>
+      </details>
+
+      <details>
+        <summary>Как приходят обновления?</summary>
+        <div class="answer">
+          <p>Приложение проверяет один JSON-файл, показывает, что нового, и по вашему согласию
+          ставит подписанную сборку. Историю обновление не трогает. Автопроверку можно выключить —
+          тогда приложение не делает ни одного сетевого запроса.</p>
+        </div>
+      </details>
+
+      <details>
+        <summary>Нужен аккаунт или подписка?</summary>
+        <div class="answer">
+          <p>Нет. Ни регистрации, ни подписки, ни сервера лицензий. Free — просто скачать,
+          Pro — разовый платёж и офлайн-ключ.</p>
+        </div>
+      </details>
+
+      <details>
+        <summary>А macOS, Linux или Windows 7?</summary>
+        <div class="answer">
+          <p>Сейчас только Windows 10/11 x64: захват буфера и глобальный хоткей написаны под
+          Windows API. Нужен WebView2 Runtime — в актуальной Windows он уже установлен.</p>
+        </div>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- ─────────────── Финальный призыв ─────────────── -->
+<section class="final">
+  <div class="wrap final__in">
+    <h2>Поставьте и проверьте за минуту</h2>
+    <p>Установщик на <span data-rel="size">3,5</span> МБ, запуск в фоне, дальше просто копируйте как обычно.</p>
+    <div class="final__cta">
+      <a class="btn btn--primary btn--lg" href="https://s3.twcstorage.ru/prisma-prava/updates/ClipVault_2.0.3_x64-setup.exe" data-rel="download">
+        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5v11M7.5 10.5L12 15l4.5-4.5M4.5 18.5h15"/></svg>
+        Скачать <span data-rel="version">v2.0.3</span>
+      </a>
+      <a class="btn btn--lg" href="https://github.com/WufCorp/ClipVault/releases" rel="noopener">Все версии</a>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- ─────────────── Подвал ─────────────── -->
+<footer class="foot">
+  <div class="wrap foot__in">
+    <a class="brand" href="./">
+      <span class="brand__mark" aria-hidden="true">
+        <svg class="ico" viewBox="0 0 24 24"><rect x="5" y="4.5" width="14" height="16.5" rx="2.5"/><rect x="9" y="2.5" width="6" height="3.6" rx="1.4"/><circle cx="12" cy="13.5" r="3"/><path d="M12 10.9v1.1M12 15v1.1M14.6 13.5h-1.1M10.5 13.5H9.4"/></svg>
+      </span>
+      ClipVault
+    </a>
+
+    <nav class="foot__links" aria-label="Ссылки">
+      <a href="https://github.com/WufCorp/ClipVault" rel="noopener">
+        <svg class="ico ico--fill" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.4 7.4 0 0 1 2-.27c.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
+        Исходники
+      </a>
+      <a href="https://github.com/WufCorp/ClipVault/releases" rel="noopener">
+        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5v11M7.5 10.5L12 15l4.5-4.5M4.5 18.5h15"/></svg>
+        Релизы
+      </a>
+      <a href="https://boosty.to/wufcorp/donate" rel="noopener">
+        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5C6 16.7 3.5 13.3 3.5 9.8A4.3 4.3 0 0112 7.4a4.3 4.3 0 018.5 2.4c0 3.5-2.5 6.9-8.5 10.7z"/></svg>
+        Поддержать
+      </a>
+      <a href="https://t.me/WufCorp" rel="noopener">
+        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 4.5L2.8 11.4l5.4 1.7M21 4.5l-3 14.6-6.3-4.5M21 4.5L8.2 13.1M8.2 13.1v5.1l3.5-3.6"/></svg>
+        Telegram
+      </a>
+    </nav>
+
+    <p class="foot__legal mono">
+      <span>© <span id="year">2026</span> WufCorp</span>
+      <span>Сайт без трекеров, кук и сторонних скриптов</span>
+      <span data-rel="version">v2.0.3</span>
+    </p>
+  </div>
+</footer>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ── Тема ──────────────────────────────────────────────── */
+  var root = document.documentElement;
+  var btn = document.getElementById("theme");
+  var ico = document.getElementById("theme-ico");
+  var SUN = '<circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M4.2 12H2M22 12h-2.2M6.3 6.3L4.8 4.8M19.2 19.2l-1.5-1.5M17.7 6.3l1.5-1.5M4.8 19.2l1.5-1.5"/>';
+  var MOON = '<path d="M20 14.5A8.5 8.5 0 019.5 4a8.5 8.5 0 1010.5 10.5z"/>';
+
+  function current() {
+    if (root.dataset.theme) return root.dataset.theme;
+    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  }
+  function paint() {
+    var dark = current() === "dark";
+    ico.innerHTML = dark ? SUN : MOON;
+    btn.setAttribute("aria-label", dark ? "Включить светлую тему" : "Включить тёмную тему");
+  }
+  btn.addEventListener("click", function () {
+    var next = current() === "dark" ? "light" : "dark";
+    root.dataset.theme = next;
+    try { localStorage.setItem("cv-theme", next); } catch (e) {}
+    paint();
+  });
+  paint();
+
+  /* ── Граница у прилипшей шапки ─────────────────────────── */
+  var nav = document.getElementById("nav");
+  var onScroll = function () { nav.dataset.stuck = window.scrollY > 8 ? "true" : "false"; };
+  window.addEventListener("scroll", onScroll, { passive: true });
+  onScroll();
+
+  /* ── Появление секций ──────────────────────────────────── */
+  var rise = document.querySelectorAll(".rise");
+  if ("IntersectionObserver" in window) {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); }
+      });
+    }, { rootMargin: "0px 0px -12% 0px" });
+    rise.forEach(function (el) { io.observe(el); });
+  } else {
+    rise.forEach(function (el) { el.classList.add("in"); });
+  }
+
+  /* ── Текущая версия ────────────────────────────────────────
+     release.json лежит рядом (свой же origin, сторонних запросов нет)
+     и обновляется скриптом публикации релиза. Если его нет или
+     запрос не прошёл — в разметке уже стоят рабочие значения. */
+  fetch("release.json", { cache: "no-cache" })
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (rel) {
+      if (!rel || !rel.version || !rel.url) return;
+      document.querySelectorAll('[data-rel="download"]').forEach(function (a) { a.href = rel.url; });
+      document.querySelectorAll('[data-rel="version"]').forEach(function (el) { el.textContent = "v" + rel.version; });
+      if (rel.size_mb) {
+        document.querySelectorAll('[data-rel="size"]').forEach(function (el) { el.textContent = rel.size_mb; });
+      }
+    })
+    .catch(function () {});
+
+  /* ── Год в подвале ─────────────────────────────────────── */
+  document.getElementById("year").textContent = String(new Date().getFullYear());
+})();
+</script>
+
+</body>
+</html>
