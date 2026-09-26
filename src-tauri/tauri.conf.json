@@ -1,0 +1,70 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "ClipVault",
+  "version": "2.0.5",
+  "identifier": "com.clipvault.desktop",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "npm run build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "withGlobalTauri": false,
+    "windows": [
+      {
+        "label": "main",
+        "create": false,
+        "title": "ClipVault",
+        "width": 700,
+        "height": 650,
+        "minWidth": 420,
+        "minHeight": 400,
+        "center": true,
+        "resizable": true,
+        "visible": false,
+        "skipTaskbar": true,
+        "alwaysOnTop": true,
+        "decorations": true
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "plugins": {
+    "updater": {
+      "endpoints": [
+        "https://s3.twcstorage.ru/prisma-prava/updates/latest.json"
+      ],
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEY5QUZDRDUyNjJBMkQ1RDgKUldUWTFhSmlVczJ2K2NCZXlNOWdxOTJFS2lDbnRuTUlsQW9KWml3NkJnSjRtTHBQbk9yNTNSbEUK",
+      "windows": {
+        "installMode": "passive"
+      }
+    }
+  },
+  "bundle": {
+    "createUpdaterArtifacts": true,
+    "active": true,
+    "targets": ["nsis"],
+    "publisher": "ClipVault",
+    "copyright": "© 2026 ClipVault",
+    "category": "Utility",
+    "shortDescription": "История буфера обмена",
+    "longDescription": "ClipVault — фоновый менеджер истории буфера обмена: текст и изображения, поиск, закрепление, открытие по Ctrl+Shift+V.",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "windows": {
+      "nsis": {
+        "installMode": "currentUser",
+        "displayLanguageSelector": true,
+        "languages": ["Russian", "English"]
+      }
+    }
+  }
+}

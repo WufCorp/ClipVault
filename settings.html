@@ -59,6 +59,15 @@
             Безлимитная история, распознавание цветов и URL, вставка без форматирования,
             слоты, экспорт/импорт и организация. Одна оплата — на всех ваших ПК, без подписки.
           </p>
+          <div class="pay-note" role="note">
+            <span class="pay-note-ico" aria-hidden="true"><svg class="ico" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3.5 6.5 8.5 6.5 8.5-6.5"/></svg></span>
+            <div>
+              <div class="pay-note-title">Ключ придёт на email, указанный при оплате</div>
+              <div class="pay-note-text">
+                Обычно в течение 24 часов. Проверьте email перед оплатой и папку «Спам» после.
+              </div>
+            </div>
+          </div>
           <div class="btn-row">
             <button id="buy-pro" class="btn btn-primary" type="button">Купить Pro — 399 ₽</button>
           </div>
@@ -132,7 +141,8 @@
           <div class="card-head"><h2>Безопасность</h2></div>
           <p class="muted small">
             Пауза записи и игнор-приложения доступны всем. Мастер-пароль — Pro.
-            Лицензия и пароль защищаются DPAPI (привязка к учётной записи Windows).
+            Сам мастер-пароль нигде не хранится — только его хеш с солью.
+            <span id="license-storage">Ключ лицензии зашифрован DPAPI (привязка к учётной записи Windows).</span>
           </p>
           <div id="master-off">
             <label class="field-label" for="master-new">Установить мастер-пароль</label>
@@ -167,8 +177,14 @@
           </label>
           <div class="btn-row">
             <button id="check-update" class="btn" type="button">Проверить сейчас</button>
+            <button id="download-portable" class="btn" type="button" hidden>Скачать архив</button>
           </div>
           <p id="update-status" class="muted small" hidden></p>
+          <p id="portable-info" class="muted small" hidden>
+            Portable-версия: обновление вручную — закройте ClipVault и замените файлы
+            из нового архива, папку <code>data</code> не трогайте.
+            Данные: <span id="data-dir"></span>
+          </p>
         </section>
 
         <!-- ── Поддержка / контакт ──────────────────────────── -->
@@ -186,6 +202,21 @@
         </footer>
       </div>
     </div>
+
+    <dialog id="buy-dialog" class="buy-dialog" aria-labelledby="buy-dialog-title">
+      <div class="buy-dialog-label">Перед оплатой</div>
+      <h3 id="buy-dialog-title">Ключ придёт на ваш email</h3>
+      <ol class="buy-steps">
+        <li>На странице оплаты <b>укажите email</b>: на него придёт ключ активации.</li>
+        <li>Ключ приходит <b>обычно в течение 24 часов</b>. Если письма нет, проверьте «Спам».</li>
+        <li>Вставьте ключ в поле «Ключ активации Pro» и нажмите «Активировать».</li>
+      </ol>
+      <p class="buy-dialog-foot">Не пришёл ключ за сутки? Напишите в Telegram <b>@WufCorp</b>.</p>
+      <div class="btn-row buy-dialog-actions">
+        <button id="buy-cancel" class="btn" type="button">Отмена</button>
+        <button id="buy-go" class="btn btn-primary" type="button">Понятно, перейти к оплате</button>
+      </div>
+    </dialog>
     <script type="module" src="/src/settings.ts"></script>
   </body>
 </html>

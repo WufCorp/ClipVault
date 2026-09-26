@@ -48,7 +48,7 @@ buffer_pc/
         ├── main.rs            тонкая обёртка → clipvault_lib::run()
         ├── lib.rs             ★ ТОЧКА ВХОДА: плагины(+updater/process/opener), setup, окно-события, invoke_handler
         ├── state.rs           Shared: db, paused, last_written_hash, images_dir, is_pro, license_email, settings
-        ├── paths.rs           каталоги данных (%APPDATA%\ClipVault) + settings.json + license.key
+        ├── paths.rs           каталоги данных (%APPDATA%\ClipVault или <exe>\data в portable) + settings.json + license.key
         ├── models.rs          ClipItem, NewItem, KIND_TEXT/IMAGE/FILES, now_ms()
         ├── settings.rs        Settings (auto_update/hotkey/ignore/font/окно/автоочистка/пароль/слоты) — JSON persist
         ├── license.rs         ★ офлайн-лицензия Ed25519: verify/activate/deactivate; публ. ключ зашит; DPAPI «в покое»
@@ -57,7 +57,7 @@ buffer_pc/
         ├── commands.rs        ★ ~39 команд для фронтенда (#[tauri::command])
         ├── tray.rs            меню трея: Открыть/⚙Настройки/Автозапуск/Пауза/Очистить/Выход
         ├── hotkey.rs          глоб. хоткей вызова (настраиваемый) + Alt+1..9 быстрая вставка (Pro)
-        ├── window.rs          show/toggle/hide "main" + show_settings (лениво создаёт "settings")
+        ├── window.rs          create_main + show/toggle/hide "main" + show_settings (лениво создаёт "settings"); профиль WebView2 в portable
         ├── clipboard/
         │   ├── mod.rs
         │   ├── listener.rs    ★ поток-слушатель: capture→dedup→БД/PNG→emit; лимит 1000

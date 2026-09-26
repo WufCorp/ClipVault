@@ -9,7 +9,8 @@
  *   2. собирает и ПОДПИСЫВАЕТ бандл (`npm run tauri build`);
  *   3. находит `*_x64-setup.exe` и парный `.sig` в bundle/nsis;
  *   4. генерирует latest.json (signature = содержимое .sig, url на S3);
- *   5. заливает .exe и latest.json в бакет (public-read) через AWS CLI.
+ *   5. собирает portable-архив (clipvault.exe + маркер `portable` + readme);
+ *   6. заливает установщик, архив и latest.json в бакет (public-read) через AWS CLI.
  *
  * Секреты в репозиторий НЕ попадают:
  *   - приватный ключ подписи: env TAURI_SIGNING_PRIVATE_KEY, либо путь к файлу
@@ -17,7 +18,8 @@
  *   - ключи S3: профиль AWS CLI (по умолчанию `timeweb`), не в коде.
  *
  * Полезные флаги / env:
- *   --skip-build            не пересобирать (если бандл уже готов);
+ *   --skip-build            не пересобирать (если бандл уже готов и подписан);
+ *                           ключ и пароль тогда не нужны;
  *   --dry-run               всё сделать, но НЕ заливать на S3;
  *   RELEASE_NOTES="..."     текст «что нового» (иначе — из release-notes.txt
  *                           в корне, иначе — дефолт по версии);
@@ -25,7 +27,16 @@
  */
 
 import { execFileSync } from "node:child_process";
-import { readFileSync, writeFileSync, readdirSync, existsSync, statSync } from "node:fs";
+import {
+  readFileSync,
+  writeFileSync,
+  readdirSync,
+  existsSync,
+  statSync,
+  mkdirSync,
+  rmSync,
+  copyFileSync,
+} from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join, resolve } from "node:path";
 
@@ -83,7 +94,9 @@ if (mismatches.length) {
 log(`Версия релиза: ${version} (совпадает в 3 местах)`);
 
 // ── Проверки окружения перед долгой сборкой ───────────────────────────────────
-if (!process.env.TAURI_SIGNING_PRIVATE_KEY) {
+// С --skip-build ключ и пароль не нужны: бандл уже подписан (в т.ч. вручную через
+// `npx tauri signer sign`), скрипт только берёт готовый .sig.
+if (!SKIP_BUILD && !process.env.TAURI_SIGNING_PRIVATE_KEY) {
   const keyFile = process.env.CLIPVAULT_UPDATER_KEY_FILE;
   if (keyFile && existsSync(keyFile)) {
     process.env.TAURI_SIGNING_PRIVATE_KEY = readFileSync(keyFile, "utf8");
@@ -97,7 +110,7 @@ if (!process.env.TAURI_SIGNING_PRIVATE_KEY) {
 }
 // Ключ обновлений защищён паролем: без него tauri build падает только в самом
 // конце, после ~5 минут сборки. Проверяем заранее.
-if (!process.env.TAURI_SIGNING_PRIVATE_KEY_PASSWORD) {
+if (!SKIP_BUILD && !process.env.TAURI_SIGNING_PRIVATE_KEY_PASSWORD) {
   die(
     "не задан пароль ключа подписи: env TAURI_SIGNING_PRIVATE_KEY_PASSWORD " +
       "(cmd: set TAURI_SIGNING_PRIVATE_KEY_PASSWORD=..., PowerShell: $env:TAURI_SIGNING_PRIVATE_KEY_PASSWORD = \"...\").",
@@ -117,9 +130,9 @@ const nsisDir = join(ROOT, "src-tauri", "target", "release", "bundle", "nsis");
 if (!existsSync(nsisDir)) die(`не найден каталог бандла: ${nsisDir}`);
 
 const files = readdirSync(nsisDir);
-const pick = (suffix) =>
-  files.find((f) => f.includes(version) && f.endsWith(suffix)) ||
-  files.find((f) => f.endsWith(suffix));
+// Только файлы текущей версии: иначе можно выложить старый установщик или
+// подпись от другой сборки.
+const pick = (suffix) => files.find((f) => f.includes(`_${version}_`) && f.endsWith(suffix));
 
 const exeName = pick("_x64-setup.exe");
 const sigName = pick("_x64-setup.exe.sig");
@@ -131,6 +144,62 @@ const sigPath = join(nsisDir, sigName);
 const signature = readFileSync(sigPath, "utf8").trim();
 log(`Установщик: ${exeName}`);
 log(`Подпись:    ${sigName}`);
+
+// ── 3.5 Portable-архив ────────────────────────────────────────────────────────
+// Тот же clipvault.exe, что внутри установщика, + файл-маркер `portable`:
+// увидев его рядом с собой, программа хранит данные в <папка>\data (paths.rs).
+// Файлы лежат в корне архива: «Извлечь всё» само создаст папку по имени zip,
+// а обновление — это распаковка поверх с заменой.
+const releaseDir = join(ROOT, "src-tauri", "target", "release");
+const appExe = join(releaseDir, "clipvault.exe");
+if (!existsSync(appExe)) die(`не найден ${appExe}`);
+if (Math.abs(statSync(appExe).mtimeMs - statSync(exePath).mtimeMs) > 30 * 60 * 1000)
+  die("clipvault.exe и установщик собраны в разное время — пересобери без --skip-build");
+
+const zipName = `ClipVault_${version}_x64-portable.zip`;
+const zipPath = join(releaseDir, "bundle", zipName);
+const stage = join(releaseDir, "portable-stage");
+rmSync(stage, { recursive: true, force: true });
+mkdirSync(stage, { recursive: true });
+copyFileSync(appExe, join(stage, "ClipVault.exe"));
+writeFileSync(
+  join(stage, "portable"),
+  "Маркер portable-режима ClipVault: пока этот файл лежит рядом с ClipVault.exe,\r\n" +
+    "история, настройки и лицензия хранятся в папке data рядом с программой.\r\n",
+  "utf8",
+);
+writeFileSync(
+  join(stage, "README.txt"),
+  [
+    `ClipVault ${version} — portable-версия`,
+    "",
+    "Запуск: ClipVault.exe. Нужен Windows 10/11 x64 с WebView2 (есть в системе по умолчанию).",
+    "Папку держите там, где можно писать файлы (не в Program Files).",
+    "",
+    "Все данные — в папке data рядом с программой: история, картинки, настройки,",
+    "лицензия Pro, логи и кэш окон. В профиль Windows ничего не пишется.",
+    "Автозапуск по умолчанию выключен — включается в меню значка в трее.",
+    "",
+    "Обновление: закройте ClipVault (трей → Выход), распакуйте новый архив поверх",
+    "с заменой файлов. Папку data не удаляйте.",
+    "",
+    "Перенос всего из установленной версии: закройте её и скопируйте содержимое",
+    "папки %APPDATA%\\ClipVault в папку data. Обе версии одновременно не запускаются.",
+    "",
+    "Сайт: https://wufcorp.github.io/ClipVault/",
+    "",
+  ].join("\r\n"),
+  "utf8",
+);
+rmSync(zipPath, { force: true });
+run("powershell", [
+  "-NoProfile",
+  "-Command",
+  `"Compress-Archive -Path '${join(stage, "*")}' -DestinationPath '${zipPath}'"`,
+]);
+rmSync(stage, { recursive: true, force: true });
+const zipUrl = `${S3.publicBase}/${zipName}`;
+log(`Portable:   ${zipName}`);
 
 // ── 4. latest.json ────────────────────────────────────────────────────────────
 let notes = process.env.RELEASE_NOTES;
@@ -171,6 +240,8 @@ if (existsSync(join(ROOT, "docs"))) {
         pub_date: latest.pub_date.slice(0, 10),
         size_mb: sizeMb,
         url: `${S3.publicBase}/${exeName}`,
+        portable_url: zipUrl,
+        portable_size_mb: (statSync(zipPath).size / 1024 / 1024).toFixed(1).replace(".", ","),
         github: prev.github || "https://github.com/WufCorp/ClipVault/releases",
       },
       null,
@@ -181,7 +252,7 @@ if (existsSync(join(ROOT, "docs"))) {
   log(`docs/release.json обновлён (${version}, ${sizeMb} МБ) — не забудь запушить docs/`);
 }
 
-// ── 5. Заливка на S3 ──────────────────────────────────────────────────────────
+// ── 6. Заливка на S3 ──────────────────────────────────────────────────────────
 const s3 = (localPath, key, extra = []) =>
   run("aws", [
     "s3",
@@ -206,6 +277,9 @@ if (DRY_RUN) {
 
 log("Загрузка установщика на S3 …");
 s3(exePath, exeName);
+
+log("Загрузка portable-архива на S3 …");
+s3(zipPath, zipName);
 
 log("Загрузка latest.json на S3 (no-cache) …");
 // latest.json без кэша — иначе клиенты могут видеть старую версию.

@@ -34,6 +34,11 @@ npm run tauri build
 - `ClipVault_2.0.0_x64-setup.exe.sig` — подпись обновления (создаётся, т.к. в конфиге
   `bundle.createUpdaterArtifacts = true`).
 
+`npm run publish-update` дополнительно собирает portable-архив
+`src-tauri/target/release/bundle/ClipVault_<ver>_x64-portable.zip`
+(`ClipVault.exe` + маркер `portable` + `README.txt`), кладёт его на S3 рядом с установщиком
+и прописывает `portable_url` в `docs/release.json` — на лендинге появляется ссылка «Portable (zip)».
+
 ## 6.3 latest.json и загрузка на S3
 
 Создать `latest.json` (значение `signature` = СОДЕРЖИМОЕ файла `.sig`):

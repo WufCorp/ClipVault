@@ -76,8 +76,12 @@
       </div>
 
       <div id="lightbox" class="lightbox" hidden>
-        <img id="lb-img" class="lightbox-img" alt="предпросмотр" />
+        <div id="lb-view" class="lightbox-view">
+          <img id="lb-img" class="lightbox-img" alt="предпросмотр" title="Клик — исходный размер" />
+        </div>
         <div class="lightbox-bar">
+          <span id="lb-dim" class="lightbox-dim"></span>
+          <button id="lb-zoom" type="button">Исходный размер</button>
           <button id="lb-copy">Копировать</button>
           <button id="lb-close">Закрыть</button>
         </div>
