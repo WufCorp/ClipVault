@@ -1,7 +1,9 @@
 {
-  "version": "2.0.3",
-  "pub_date": "2026-09-18",
+  "version": "2.0.5",
+  "pub_date": "2026-09-26",
   "size_mb": "3,5",
-  "url": "https://s3.twcstorage.ru/prisma-prava/updates/ClipVault_2.0.3_x64-setup.exe",
+  "url": "https://s3.twcstorage.ru/prisma-prava/updates/ClipVault_2.0.5_x64-setup.exe",
+  "portable_url": "https://s3.twcstorage.ru/prisma-prava/updates/ClipVault_2.0.5_x64-portable.zip",
+  "portable_size_mb": "4,5",
   "github": "https://github.com/WufCorp/ClipVault/releases"
 }

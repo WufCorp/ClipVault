@@ -156,6 +156,9 @@ code {
   border-radius: var(--r-ctrl);
 }
 
+/* hidden должен побеждать display у .btn и других flex-элементов. */
+[hidden] { display: none !important; }
+
 /* ── Кнопки ──────────────────────────────────────────────────────────────── */
 .btn {
   display: inline-flex; align-items: center; gap: 9px;
