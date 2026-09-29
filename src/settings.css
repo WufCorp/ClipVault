@@ -363,6 +363,25 @@ svg {
   cursor: pointer;
 }
 
+.tab-checks {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 6px 12px;
+  margin-top: 6px;
+}
+.tab-checks label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  cursor: pointer;
+}
+.tab-checks input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
 /* ── Footer ──────────────────────────────────────────────── */
 .foot {
   display: flex;

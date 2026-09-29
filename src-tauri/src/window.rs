@@ -78,6 +78,46 @@ fn place_near_cursor(app: &AppHandle, win: &WebviewWindow) {
     let _ = win.set_position(PhysicalPosition::new(x, y));
 }
 
+/// Окно истории потеряло фокус: прячем, если не включено «Не прятать окно»
+/// и пользователь действительно ушёл в другое окно.
+///
+/// Tauri сообщает о потере фокуса и тогда, когда окно тащат за заголовок:
+/// фокус уходит из WebView2 в рамку, но активным остаётся само окно. Поэтому
+/// выжидаем немного и прячем, только если активно уже чужое окно.
+// В отладочной сборке окно при потере фокуса не прячется (см. lib.rs).
+#[cfg_attr(debug_assertions, allow(dead_code))]
+pub fn hide_on_blur(window: &tauri::Window) {
+    let keep_open = {
+        let s = window.state::<Shared>();
+        let s = s.settings.lock().unwrap();
+        s.keep_open
+    };
+    if keep_open {
+        return;
+    }
+    let win = window.clone();
+    std::thread::spawn(move || {
+        std::thread::sleep(std::time::Duration::from_millis(100));
+        if !is_foreground(&win) {
+            let _ = win.hide();
+        }
+    });
+}
+
+#[cfg(windows)]
+#[cfg_attr(debug_assertions, allow(dead_code))]
+fn is_foreground(win: &tauri::Window) -> bool {
+    use windows_sys::Win32::UI::WindowsAndMessaging::GetForegroundWindow;
+    let Ok(hwnd) = win.hwnd() else { return false };
+    unsafe { GetForegroundWindow() as isize == hwnd.0 as isize }
+}
+
+#[cfg(not(windows))]
+#[cfg_attr(debug_assertions, allow(dead_code))]
+fn is_foreground(win: &tauri::Window) -> bool {
+    win.is_focused().unwrap_or(false)
+}
+
 /// Переключить видимость (для клика по иконке трея / повторного нажатия хоткея).
 pub fn toggle_history(app: &AppHandle) {
     if let Some(win) = app.get_webview_window(MAIN) {

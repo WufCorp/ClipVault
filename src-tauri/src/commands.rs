@@ -30,8 +30,9 @@ pub fn list_items(
     limit: i64,
     offset: i64,
 ) -> CmdResult<Vec<ClipItem>> {
+    // По дате: во «Все» закреплённые показываются отдельной сворачиваемой группой.
     let conn = state.db.lock().unwrap();
-    repo::list(&conn, &filter, limit, offset).map_err(|e| e.to_string())
+    repo::list(&conn, &filter, false, limit, offset).map_err(|e| e.to_string())
 }
 
 /// Мгновенный поиск по тексту (FTS5).
@@ -42,7 +43,7 @@ pub fn search_items(
     limit: i64,
 ) -> CmdResult<Vec<ClipItem>> {
     let conn = state.db.lock().unwrap();
-    repo::search(&conn, &query, limit).map_err(|e| e.to_string())
+    repo::search(&conn, &query, true, limit).map_err(|e| e.to_string())
 }
 
 /// Кладёт элемент по id обратно в буфер обмена (с защитой от цикла и touch).
@@ -280,6 +281,9 @@ pub struct SettingsView {
     pub auto_lock_min: u32,
     pub has_master: bool,
     pub slots: Vec<Option<i64>>,
+    pub auto_paste: bool,
+    pub keep_open: bool,
+    pub hidden_tabs: Vec<String>,
     /// Portable-версия: обновление вручную (zip), а не через установщик.
     pub portable: bool,
     /// Где лежат данные (показываем в настройках).
@@ -299,6 +303,9 @@ impl SettingsView {
             auto_lock_min: s.auto_lock_min,
             has_master: s.master_hash.is_some(),
             slots: s.slots.clone(),
+            auto_paste: s.auto_paste,
+            keep_open: s.keep_open,
+            hidden_tabs: s.hidden_tabs.clone(),
             portable: crate::paths::is_portable(),
             data_dir: crate::paths::data_dir().display().to_string(),
         }
@@ -317,6 +324,48 @@ pub fn set_auto_update(state: State<'_, Shared>, enabled: bool) -> CmdResult<()>
     let mut s = state.settings.lock().unwrap();
     s.auto_update = enabled;
     s.save()
+}
+
+/// Тумблер автовставки (Ctrl+V после выбора элемента).
+#[tauri::command]
+pub fn set_auto_paste(state: State<'_, Shared>, enabled: bool) -> CmdResult<()> {
+    let mut s = state.settings.lock().unwrap();
+    s.auto_paste = enabled;
+    s.save()
+}
+
+/// Тумблер «Не прятать окно».
+#[tauri::command]
+pub fn set_keep_open(state: State<'_, Shared>, enabled: bool) -> CmdResult<()> {
+    let mut s = state.settings.lock().unwrap();
+    s.keep_open = enabled;
+    s.save()
+}
+
+/// Вкладки окна истории, которые можно скрыть («Все» скрыть нельзя).
+const HIDEABLE_TABS: &[&str] = &["pinned", "text", "image", "files", "colors", "urls", "emails"];
+
+/// Список скрытых вкладок окна истории.
+#[tauri::command]
+pub fn set_hidden_tabs(state: State<'_, Shared>, tabs: Vec<String>) -> CmdResult<()> {
+    let mut s = state.settings.lock().unwrap();
+    s.hidden_tabs = tabs
+        .into_iter()
+        .filter(|t| HIDEABLE_TABS.contains(&t.as_str()))
+        .collect();
+    s.save()
+}
+
+/// Завершает выбор элемента: если `paste` и включена автовставка — вставляет
+/// буфер в окно, где был пользователь; прячет окно истории, если не включено
+/// «Не прятать окно».
+#[tauri::command]
+pub fn finish_pick(app: AppHandle, state: State<'_, Shared>, paste: bool) {
+    let (auto_paste, keep_open) = {
+        let s = state.settings.lock().unwrap();
+        (s.auto_paste, s.keep_open)
+    };
+    crate::paste::finish(&app, paste && auto_paste, !keep_open);
 }
 
 // ── Фаза 2: источник, игнор, экспорт, хоткей ─────────────
@@ -352,7 +401,7 @@ pub fn list_sources(state: State<'_, Shared>) -> CmdResult<Vec<String>> {
 pub fn export_history(state: State<'_, Shared>, format: String) -> CmdResult<String> {
     let items = {
         let conn = state.db.lock().unwrap();
-        repo::list(&conn, "all", 100_000, 0).map_err(|e| e.to_string())?
+        repo::list(&conn, "all", true, 100_000, 0).map_err(|e| e.to_string())?
     };
     if format == "json" {
         serde_json::to_string_pretty(&items).map_err(|e| e.to_string())
@@ -560,7 +609,7 @@ pub fn search_advanced(
     };
     let items = {
         let conn = state.db.lock().unwrap();
-        repo::query_items(&conn, &f, limit).map_err(|e| e.to_string())?
+        repo::query_items(&conn, &f, true, limit).map_err(|e| e.to_string())?
     };
     match filters.regex.filter(|r| !r.trim().is_empty()) {
         Some(rx) => {
@@ -685,7 +734,7 @@ pub(crate) fn quick_paste_nth(app: &AppHandle, index: usize) {
     let state = app.state::<Shared>();
     let id = {
         let conn = state.db.lock().unwrap();
-        match repo::list(&conn, "all", (index as i64) + 1, 0) {
+        match repo::list(&conn, "all", false, (index as i64) + 1, 0) {
             Ok(items) => items.get(index).map(|it| it.id),
             Err(_) => None,
         }
@@ -693,6 +742,9 @@ pub(crate) fn quick_paste_nth(app: &AppHandle, index: usize) {
     if let Some(id) = id {
         if put_item_in_clipboard(state.inner(), id).is_ok() {
             emit_updated(app);
+            if state.settings.lock().unwrap().auto_paste {
+                crate::paste::paste_to_foreground();
+            }
         }
     }
 }

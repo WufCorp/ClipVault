@@ -422,6 +422,43 @@ svg {
   stroke-width: 1.8;
 }
 
+/* Группа закреплённых во «Все»: по умолчанию свёрнута в одну строку. */
+.group-head {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 11px;
+  margin-bottom: 6px;
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--r-card);
+  color: var(--ink-dim);
+  font-size: 12.5px;
+  cursor: pointer;
+  user-select: none;
+}
+.group-head:hover {
+  color: var(--ink);
+  border-color: var(--accent);
+}
+.group-head .ico {
+  width: 13px;
+  height: 13px;
+  color: var(--accent);
+}
+.group-arrow {
+  display: inline-block;
+  width: 10px;
+  transition: transform 0.12s;
+}
+.group-head.open .group-arrow {
+  transform: rotate(90deg);
+}
+.group-sep {
+  height: 1px;
+  background: var(--line);
+  margin: 4px 2px 10px;
+}
+
 /* Удаление одним кликом: появляется при наведении и на выбранном элементе. */
 .item-del {
   position: absolute;
@@ -573,6 +610,12 @@ body.compact .item-text {
   font-family: var(--font-ui);
   font-size: 12.5px;
   cursor: pointer;
+}
+.ctxmenu button .key {
+  float: right;
+  margin-left: 18px;
+  color: var(--ink-faint);
+  font-size: 11px;
 }
 .ctxmenu button:hover {
   background: var(--accent-bg);

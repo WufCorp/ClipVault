@@ -547,7 +547,7 @@ dependencies = [
 
 [[package]]
 name = "clipvault"
-version = "2.0.5"
+version = "2.0.6"
 dependencies = [
  "arboard",
  "base64 0.22.1",

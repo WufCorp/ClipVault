@@ -11,6 +11,9 @@ interface LicenseInfo {
 }
 interface SettingsView {
   auto_update: boolean;
+  auto_paste: boolean;
+  keep_open: boolean;
+  hidden_tabs: string[];
   open_hotkey: string;
   ignore_apps: string[];
   window_memory: boolean;
@@ -57,6 +60,9 @@ const el = {
   hotkey: $<HTMLInputElement>("hotkey"),
   hotkeySave: $<HTMLButtonElement>("hotkey-save"),
   hotkeyMsg: $<HTMLDivElement>("hotkey-msg"),
+  autoPaste: $<HTMLInputElement>("auto-paste"),
+  keepOpen: $<HTMLInputElement>("keep-open"),
+  tabsVisible: $<HTMLDivElement>("tabs-visible"),
   ignore: $<HTMLTextAreaElement>("ignore"),
   ignoreSave: $<HTMLButtonElement>("ignore-save"),
   // Данные
@@ -416,6 +422,9 @@ async function loadSettings() {
   try {
     const s = await invoke<SettingsView>("get_settings");
     el.autoUpdate.checked = s.auto_update;
+    el.autoPaste.checked = s.auto_paste;
+    el.keepOpen.checked = s.keep_open;
+    tabChecks().forEach((c) => (c.checked = !s.hidden_tabs.includes(c.dataset.tab!)));
     isPortable = s.portable;
     el.portableInfo.hidden = !s.portable;
     if (s.portable) {
@@ -517,6 +526,17 @@ el.autoLock.addEventListener("change", () => {
 });
 
 el.checkUpdate.addEventListener("click", checkUpdate);
+el.keepOpen.addEventListener("change", () => {
+  invoke("set_keep_open", { enabled: el.keepOpen.checked }).catch(console.error);
+});
+const tabChecks = () => el.tabsVisible.querySelectorAll<HTMLInputElement>("input[data-tab]");
+el.tabsVisible.addEventListener("change", () => {
+  const tabs = [...tabChecks()].filter((c) => !c.checked).map((c) => c.dataset.tab!);
+  invoke("set_hidden_tabs", { tabs }).catch(console.error);
+});
+el.autoPaste.addEventListener("change", () => {
+  invoke("set_auto_paste", { enabled: el.autoPaste.checked }).catch(console.error);
+});
 el.autoUpdate.addEventListener("change", () => {
   invoke("set_auto_update", { enabled: el.autoUpdate.checked }).catch(console.error);
 });

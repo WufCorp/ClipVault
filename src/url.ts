@@ -31,6 +31,13 @@ export function parseUrl(input: string): URL | null {
   }
 }
 
+/// Возвращает адрес, если строка целиком — email (можно с "mailto:"), иначе null.
+export function parseEmail(input: string): string | null {
+  const s = input.trim().replace(/^mailto:/i, "");
+  if (s.length === 0 || s.length > 254) return null;
+  return /^[^\s@<>()",;:]+@[^\s@<>()",;:]+\.[^\s@<>()",;:.]{2,}$/.test(s) ? s : null;
+}
+
 /// Домен ссылки без "www.".
 export function domainOf(u: URL): string {
   return u.hostname.replace(/^www\./, "");

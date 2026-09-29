@@ -86,6 +86,14 @@
           <div class="hint-inline">Кликните по полю и зажмите сочетание (например Ctrl + Shift + V), затем «Применить».</div>
           <div id="hotkey-msg" class="hint-inline" hidden></div>
 
+          <label class="toggle-row" style="margin-top: 14px">
+            <span>
+              Вставлять автоматически
+              <span class="sub">Enter — вставить в окно, где вы были; Ctrl+Enter — только скопировать. Выключите, чтобы вставлять самому через Ctrl+V.</span>
+            </span>
+            <input id="auto-paste" type="checkbox" />
+          </label>
+
           <label class="field-label" for="ignore" style="margin-top: 14px">
             Приложения-исключения (не сохранять буфер)
           </label>
@@ -95,6 +103,30 @@
             <button id="ignore-save" class="btn" type="button">Сохранить список</button>
             <span class="hint-inline">Через запятую. Имя .exe. Пароли/банки в безопасности.</span>
           </div>
+        </section>
+
+        <!-- ── Окно истории ─────────────────────────────────── -->
+        <section class="card">
+          <div class="card-head"><h2>Окно истории</h2></div>
+          <label class="toggle-row">
+            <span>
+              Не прятать окно
+              <span class="sub">Окно остаётся на экране после вставки и когда вы переходите в другую программу: кликните в нужное поле, затем по элементу — он вставится туда. Закрыть — Esc, крестик или горячая клавиша.</span>
+            </span>
+            <input id="keep-open" type="checkbox" />
+          </label>
+
+          <div class="field-label" style="margin-top: 14px">Показывать вкладки</div>
+          <div id="tabs-visible" class="tab-checks">
+            <label><input type="checkbox" data-tab="pinned" /> Закреплённые</label>
+            <label><input type="checkbox" data-tab="text" /> Текст</label>
+            <label><input type="checkbox" data-tab="image" /> Фото</label>
+            <label><input type="checkbox" data-tab="files" /> Файлы</label>
+            <label><input type="checkbox" data-tab="colors" /> Цвета</label>
+            <label><input type="checkbox" data-tab="urls" /> Ссылки</label>
+            <label><input type="checkbox" data-tab="emails" /> Почта</label>
+          </div>
+          <div class="hint-inline">Вкладка «Все» есть всегда. Цвета, ссылки и почта — умные списки Pro.</div>
         </section>
 
         <!-- ── Данные ───────────────────────────────────────── -->

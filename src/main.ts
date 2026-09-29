@@ -4,7 +4,7 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 import { check } from "@tauri-apps/plugin-updater";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { parseColor, toHex, toRgb, toHsl, toCss, type Rgba } from "./color";
-import { parseUrl, cleanUrl, domainOf } from "./url";
+import { parseUrl, parseEmail, cleanUrl, domainOf } from "./url";
 import "./styles.css";
 
 interface ClipItem {
@@ -29,6 +29,8 @@ interface SettingsView {
   window_memory: boolean;
   has_master: boolean;
   auto_lock_min: number;
+  auto_paste: boolean;
+  hidden_tabs: string[];
 }
 
 const PAGE = 300;
@@ -85,11 +87,23 @@ const el = {
 };
 
 let filter = "all";
+/** Закреплённые во «Все»: отдельная группа над лентой (null — группы нет). */
+let pinnedGroup: ClipItem[] | null = null;
+/** Группа развёрнута. По умолчанию свёрнута; запоминается в localStorage. */
+let pinnedOpen = false;
+try {
+  pinnedOpen = localStorage.getItem("pinnedOpen") === "1";
+} catch {
+  /* нет хранилища — просто свёрнуто */
+}
+/** Умные списки (Pro): текстовые элементы, отобранные на клиенте. */
+const SMART_TABS = ["colors", "urls", "emails"];
 let query = "";
 let items: ClipItem[] = [];
 let selected = -1;
 let isPro = false;
 let windowMemory = false;
+let autoPaste = true;
 let hasMaster = false;
 let autoLockMin = 0;
 let unlockedAt = 0;
@@ -121,7 +135,7 @@ function buildFilters() {
 
 async function refresh() {
   try {
-    if (filter === "colors" || filter === "urls") {
+    if (SMART_TABS.includes(filter)) {
       const base = await invoke<ClipItem[]>("list_items", {
         filter: "text",
         limit: 1000,
@@ -129,7 +143,9 @@ async function refresh() {
       });
       items = base.filter((it) => {
         const c = it.content ?? it.preview ?? "";
-        return filter === "colors" ? !!parseColor(c) : !!parseUrl(c);
+        if (filter === "colors") return !!parseColor(c);
+        if (filter === "urls") return !!parseUrl(c);
+        return !!parseEmail(c);
       });
     } else if (facetActive()) {
       items = await invoke<ClipItem[]>("search_advanced", {
@@ -138,6 +154,16 @@ async function refresh() {
       });
     } else if (query.trim()) {
       items = await invoke<ClipItem[]>("search_items", { query, limit: PAGE });
+    } else if (filter === "all") {
+      // «Все»: закреплённые — сворачиваемой группой сверху, ниже лента по времени.
+      const [pinned, rest] = await Promise.all([
+        invoke<ClipItem[]>("list_items", { filter: "pinned", limit: 1000, offset: 0 }),
+        invoke<ClipItem[]>("list_items", { filter: "unpinned", limit: PAGE, offset: 0 }),
+      ]);
+      pinnedGroup = pinned.length > 0 ? pinned : null;
+      items = pinnedGroup && pinnedOpen ? [...pinned, ...rest] : rest;
+      if (selected >= items.length) selected = items.length - 1;
+      return render();
     } else {
       items = await invoke<ClipItem[]>("list_items", { filter, limit: PAGE, offset: 0 });
     }
@@ -145,16 +171,48 @@ async function refresh() {
     console.error("refresh failed", e);
     items = [];
   }
+  pinnedGroup = null;
   if (selected >= items.length) selected = items.length - 1;
   render();
 }
 
 // ── Рендер списка ────────────────────────────────────────
+function togglePinnedGroup() {
+  pinnedOpen = !pinnedOpen;
+  try {
+    localStorage.setItem("pinnedOpen", pinnedOpen ? "1" : "0");
+  } catch {
+    /* не запомним — не страшно */
+  }
+  selected = -1;
+  refresh();
+}
+
+function renderGroupHead(count: number) {
+  const head = document.createElement("div");
+  head.className = "group-head" + (pinnedOpen ? " open" : "");
+  head.title = pinnedOpen ? "Свернуть закреплённые" : "Показать закреплённые";
+  head.innerHTML = `<span class="group-arrow">▸</span>${svgIcon("pin")}`;
+  const label = document.createElement("span");
+  label.textContent = `Закреплённые · ${count}`;
+  head.appendChild(label);
+  head.addEventListener("click", togglePinnedGroup);
+  el.list.appendChild(head);
+}
+
 function render() {
   el.list.innerHTML = "";
-  el.empty.hidden = items.length > 0;
+  el.empty.hidden = items.length > 0 || !!pinnedGroup;
+
+  const groupSize = pinnedGroup && pinnedOpen ? pinnedGroup.length : 0;
+  if (pinnedGroup) renderGroupHead(pinnedGroup.length);
 
   items.forEach((it, i) => {
+    if (pinnedGroup && i === groupSize && groupSize > 0) {
+      const sep = document.createElement("div");
+      sep.className = "group-sep";
+      el.list.appendChild(sep);
+    }
     const card = document.createElement("div");
     card.className = "item" + (i === selected ? " selected" : "");
     card.dataset.id = String(it.id);
@@ -284,24 +342,39 @@ async function loadImage(id: number, img: HTMLImageElement) {
 }
 
 // ── Действия ─────────────────────────────────────────────
-async function choose(it: ClipItem) {
+/** Прячет окно; при `paste` бэкенд ещё и вставит буфер (Ctrl+V) туда, где был
+ *  пользователь, — если автовставка включена в настройках. */
+async function finishPick(paste: boolean) {
+  closeContext();
+  try {
+    await invoke("finish_pick", { paste });
+  } catch (e) {
+    console.error("finish_pick failed", e);
+    await win.hide();
+  }
+}
+
+/** Выбор элемента: Enter/клик — вставить, Ctrl+Enter (`paste = false`) — только в буфер. */
+async function choose(it: ClipItem, paste = true) {
   try {
     await invoke("copy_item", { id: it.id });
   } catch (e) {
     console.error("copy failed", e);
+    return finishPick(false);
   }
-  closeContext();
-  await win.hide();
+  await finishPick(paste);
 }
 
+/** Shift+Enter: вставить как обычный текст (Pro); в Free — обычная вставка. */
 async function choosePlain(it: ClipItem) {
+  if (!isPro || it.type !== "text") return choose(it);
   try {
     await invoke("copy_item_plain", { id: it.id });
   } catch (e) {
     console.error("copy plain failed", e);
+    return finishPick(false);
   }
-  closeContext();
-  await win.hide();
+  await finishPick(true);
 }
 
 async function togglePin(it: ClipItem) {
@@ -492,9 +565,17 @@ function promptInput(title: string, initial = ""): Promise<string | null> {
 // ── Контекстное меню ─────────────────────────────────────
 function openContext(x: number, y: number, it: ClipItem) {
   el.ctx.innerHTML = "";
+  // "Текст	Клавиша" — клавиша выводится справа серым.
   const add = (label: string, fn: () => void, danger = false) => {
     const b = document.createElement("button");
-    b.textContent = label;
+    const [text, key] = label.split("	");
+    b.textContent = text;
+    if (key) {
+      const k = document.createElement("span");
+      k.className = "key";
+      k.textContent = key;
+      b.appendChild(k);
+    }
     if (danger) b.className = "danger";
     b.addEventListener("click", async () => {
       closeContext();
@@ -508,8 +589,14 @@ function openContext(x: number, y: number, it: ClipItem) {
     el.ctx.appendChild(s);
   };
 
-  add("Копировать", () => choose(it));
-  if (it.type === "text" && isPro) add("📄 Как обычный текст", () => choosePlain(it));
+  if (autoPaste) {
+    add("Вставить	Enter", () => choose(it));
+    if (it.type === "text" && isPro) add("📄 Как обычный текст	Shift+Enter", () => choosePlain(it));
+    add("Только копировать	Ctrl+Enter", () => choose(it, false));
+  } else {
+    add("Копировать", () => choose(it));
+    if (it.type === "text" && isPro) add("📄 Как обычный текст", () => choosePlain(it));
+  }
   if (it.type === "image") add("Предпросмотр", () => openLightbox(it));
 
   const color = it.type === "text" ? parseColor(it.content ?? it.preview ?? "") : null;
@@ -537,7 +624,7 @@ function openContext(x: number, y: number, it: ClipItem) {
   }
 
   sep();
-  add("Удалить", () => remove(it), true);
+  add("Удалить	Delete", () => remove(it), true);
 
   el.ctx.hidden = false;
   const w = el.ctx.offsetWidth;
@@ -577,7 +664,7 @@ async function renderSlots() {
     b.addEventListener("click", async () => {
       if (id != null) {
         await invoke("restore_slot", { index: i }).catch((e) => console.error(e));
-        await win.hide();
+        await finishPick(true);
       } else {
         const cur = items[selected] ?? items[0];
         if (cur) {
@@ -628,7 +715,7 @@ function updateSelection() {
   el.list.querySelectorAll(".item").forEach((n, i) =>
     n.classList.toggle("selected", i === selected),
   );
-  const node = el.list.children[selected] as HTMLElement | undefined;
+  const node = el.list.querySelectorAll<HTMLElement>(".item")[selected];
   node?.scrollIntoView({ block: "nearest" });
 }
 
@@ -658,12 +745,28 @@ async function loadSettings() {
     document.documentElement.style.setProperty("--fs", s.font_size + "px");
     document.body.classList.toggle("compact", s.compact_mode);
     windowMemory = s.window_memory;
+    autoPaste = s.auto_paste;
+    applyHiddenTabs(s.hidden_tabs);
     hasMaster = s.has_master;
     autoLockMin = s.auto_lock_min;
   } catch (e) {
     console.error("get_settings failed", e);
   }
 }
+/** Прячет вкладки, выключенные в настройках. Если активная скрыта — переходим на «Все». */
+function applyHiddenTabs(hidden: string[]) {
+  el.tabs.querySelectorAll<HTMLElement>(".tab[data-filter]").forEach((t) => {
+    const f = t.dataset.filter || "all";
+    t.hidden = f !== "all" && hidden.includes(f);
+  });
+  if (filter !== "all" && hidden.includes(filter)) {
+    filter = "all";
+    el.tabs.querySelectorAll(".tab").forEach((x) => x.classList.remove("active"));
+    el.tabs.querySelector('.tab[data-filter="all"]')?.classList.add("active");
+    refresh();
+  }
+}
+
 async function loadLicense() {
   try {
     isPro = (await invoke<{ pro: boolean }>("get_license")).pro;
@@ -722,7 +825,7 @@ el.search.addEventListener("input", () => {
 el.tabs.querySelectorAll(".tab[data-filter]").forEach((t) =>
   t.addEventListener("click", () => {
     const f = (t as HTMLElement).dataset.filter || "all";
-    if ((f === "colors" || f === "urls") && !isPro) {
+    if (SMART_TABS.includes(f) && !isPro) {
       upsell();
       return;
     }
@@ -827,11 +930,14 @@ document.addEventListener("keydown", (e) => {
     e.preventDefault();
     move(-1);
   } else if (e.key === "Enter") {
+    // Enter — вставить, Shift+Enter — как обычный текст, Ctrl+Enter — только в буфер.
     const it = items[selected];
-    if (it) {
-      if (it.type === "image") openLightbox(it);
-      else choose(it);
-    }
+    if (!it) return;
+    e.preventDefault();
+    if (e.ctrlKey) choose(it, false);
+    else if (it.type === "image") openLightbox(it);
+    else if (e.shiftKey) choosePlain(it);
+    else choose(it);
   }
 });
 
@@ -843,6 +949,7 @@ window.addEventListener("scroll", closeContext, true);
 // ── События из бэкенда ───────────────────────────────────
 listen("history-updated", () => refresh());
 listen("focus-search", () => {
+  loadSettings();
   el.search.value = "";
   query = "";
   selected = -1;

@@ -7,6 +7,7 @@ mod db;
 mod hotkey;
 mod license;
 mod models;
+mod paste;
 mod paths;
 mod settings;
 mod source;
@@ -128,6 +129,8 @@ pub fn run() {
 
             // Трей и глобальная горячая клавиша.
             tray::build(&handle)?;
+            // Куда вставлять выбранное: последнее активное окно чужого приложения.
+            paste::start_tracking();
             hotkey::register(&handle);
             if is_pro_startup {
                 hotkey::register_quickpaste(&handle);
@@ -145,12 +148,12 @@ pub fn run() {
                     api.prevent_close();
                 }
             }
-            // В релизе прячем ТОЛЬКО окно истории при потере фокуса (поведение поппера).
-            // Настройки при потере фокуса не прячем.
+            // В релизе прячем ТОЛЬКО окно истории при потере фокуса (поведение поппера),
+            // если не включено «Не прятать окно». Настройки при потере фокуса не прячем.
             #[cfg(not(debug_assertions))]
             tauri::WindowEvent::Focused(false) => {
                 if window.label() == crate::window::MAIN {
-                    let _ = window.hide();
+                    crate::window::hide_on_blur(window);
                 }
             }
             _ => {}
@@ -174,6 +177,10 @@ pub fn run() {
             commands::get_settings,
             commands::set_auto_update,
             commands::copy_item_plain,
+            commands::set_auto_paste,
+            commands::finish_pick,
+            commands::set_hidden_tabs,
+            commands::set_keep_open,
             commands::set_open_hotkey,
             commands::set_ignore_apps,
             commands::list_sources,

@@ -71,6 +71,20 @@ pub struct Settings {
     #[serde(default)]
     pub encrypt: bool,
 
+    /// Автовставка: после выбора элемента нажать Ctrl+V в окне, где был
+    /// пользователь (вкл по умолчанию). Выкл = только копировать в буфер.
+    #[serde(default = "default_true")]
+    pub auto_paste: bool,
+
+    /// «Не прятать окно»: окно истории остаётся на экране после вставки и при
+    /// переходе в другое приложение; закрывается Esc/крестиком/хоткеем (выкл по умолчанию).
+    #[serde(default)]
+    pub keep_open: bool,
+
+    /// Скрытые вкладки окна истории (ключи data-filter: "colors", "urls"…).
+    #[serde(default)]
+    pub hidden_tabs: Vec<String>,
+
     /// Слоты (Pro, 5.3): до 10 закреплённых ссылок на элементы (id или None).
     #[serde(default)]
     pub slots: Vec<Option<i64>>,
@@ -90,6 +104,9 @@ impl Default for Settings {
             master_hash: None,
             auto_lock_min: 0,
             encrypt: false,
+            auto_paste: true,
+            keep_open: false,
+            hidden_tabs: Vec::new(),
             slots: Vec::new(),
         }
     }

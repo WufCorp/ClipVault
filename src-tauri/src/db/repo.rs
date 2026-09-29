@@ -33,6 +33,7 @@ fn row_to_item(row: &Row) -> rusqlite::Result<ClipItem> {
 fn filter_clause(filter: &str) -> &'static str {
     match filter {
         "pinned" => "WHERE is_pinned = 1",
+        "unpinned" => "WHERE is_pinned = 0",
         "text" => "WHERE type = 'text'",
         "image" => "WHERE type = 'image'",
         "files" => "WHERE type = 'files'",
@@ -40,18 +41,28 @@ fn filter_clause(filter: &str) -> &'static str {
     }
 }
 
-/// Список элементов: закреплённые сверху, затем по свежести использования.
+/// Порядок списка: по свежести использования; при `pinned_first` закреплённые
+/// идут первыми (поиск).
+fn order_by(pinned_first: bool) -> &'static str {
+    if pinned_first {
+        "ORDER BY i.is_pinned DESC, COALESCE(i.last_used_at, i.created_at) DESC"
+    } else {
+        "ORDER BY COALESCE(i.last_used_at, i.created_at) DESC"
+    }
+}
+
+/// Список элементов по свежести использования (закреплённые — см. `order_by`).
 pub fn list(
     conn: &Connection,
     filter: &str,
+    pinned_first: bool,
     limit: i64,
     offset: i64,
 ) -> rusqlite::Result<Vec<ClipItem>> {
     let sql = format!(
-        "SELECT {SELECT_COLS} FROM clipboard_items i {} \
-         ORDER BY i.is_pinned DESC, COALESCE(i.last_used_at, i.created_at) DESC \
-         LIMIT ?1 OFFSET ?2",
-        filter_clause(filter)
+        "SELECT {SELECT_COLS} FROM clipboard_items i {} {} LIMIT ?1 OFFSET ?2",
+        filter_clause(filter),
+        order_by(pinned_first)
     );
     let mut stmt = conn.prepare(&sql)?;
     let rows = stmt.query_map(params![limit, offset], row_to_item)?;
@@ -90,13 +101,19 @@ fn text_condition(input: &str) -> Option<(String, Vec<rusqlite::types::Value>)> 
 }
 
 /// Мгновенный поиск по тексту: начало слова (FTS5) или фрагмент внутри слова.
-pub fn search(conn: &Connection, query: &str, limit: i64) -> rusqlite::Result<Vec<ClipItem>> {
+pub fn search(
+    conn: &Connection,
+    query: &str,
+    pinned_first: bool,
+    limit: i64,
+) -> rusqlite::Result<Vec<ClipItem>> {
     let Some((cond, mut binds)) = text_condition(query) else {
-        return list(conn, "all", limit, 0);
+        return list(conn, "all", pinned_first, limit, 0);
     };
     binds.push(rusqlite::types::Value::Integer(limit));
     let sql = format!(
-        "SELECT {SELECT_COLS} FROM clipboard_items i          WHERE {cond}          ORDER BY i.is_pinned DESC, COALESCE(i.last_used_at, i.created_at) DESC          LIMIT ?"
+        "SELECT {SELECT_COLS} FROM clipboard_items i WHERE {cond} {} LIMIT ?",
+        order_by(pinned_first)
     );
     let mut stmt = conn.prepare(&sql)?;
     let rows = stmt.query_map(rusqlite::params_from_iter(binds.iter()), row_to_item)?;
@@ -298,7 +315,12 @@ pub struct Filters {
 
 /// Фасетный поиск: комбинирует FTS-запрос и фильтры источник/категория/тег/дата/тип.
 /// Regex применяется вызывающим кодом поверх результата (в командах).
-pub fn query_items(conn: &Connection, f: &Filters, limit: i64) -> rusqlite::Result<Vec<ClipItem>> {
+pub fn query_items(
+    conn: &Connection,
+    f: &Filters,
+    pinned_first: bool,
+    limit: i64,
+) -> rusqlite::Result<Vec<ClipItem>> {
     use rusqlite::types::Value;
 
     let mut conditions: Vec<String> = Vec::new();
@@ -340,9 +362,8 @@ pub fn query_items(conn: &Connection, f: &Filters, limit: i64) -> rusqlite::Resu
     binds.push(Value::Integer(limit));
 
     let sql = format!(
-        "SELECT {SELECT_COLS} FROM clipboard_items i {where_sql} \
-         ORDER BY i.is_pinned DESC, COALESCE(i.last_used_at, i.created_at) DESC \
-         LIMIT ?"
+        "SELECT {SELECT_COLS} FROM clipboard_items i {where_sql} {} LIMIT ?",
+        order_by(pinned_first)
     );
     let mut stmt = conn.prepare(&sql)?;
     let rows = stmt.query_map(rusqlite::params_from_iter(binds.iter()), row_to_item)?;
